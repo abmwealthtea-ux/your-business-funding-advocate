@@ -880,7 +880,7 @@ function BusinessFundingPortal() {
           <div className="foot-main">
             <div>
               <div className="foot-name">{BRAND_NAME}</div>
-              <div className="foot-contact">{CONTACT.email} · {CONTACT.location}</div>
+              <div className="foot-contact"><a href={`mailto:${CONTACT.email}`} style={{ color: "inherit", textDecoration: "underline" }}>{CONTACT.email}</a> · {CONTACT.location}</div>
             </div>
             <nav className="foot-links">
               <a onClick={() => setModal("privacy")}>Privacy Policy</a>
