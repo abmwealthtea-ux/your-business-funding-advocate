@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Business Advocate</title>
+  <meta name="description" content="Form your business, build your foundation, and get the funding you deserve. Plain-English guidance from a coach in your corner." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20110%27%3E%3Crect%20width%3D%27100%27%20height%3D%27110%27%20rx%3D%2716%27%20fill%3D%27%230A1B3D%27/%3E%3Cpath%20d%3D%27M50%2012%20L84%2024%20V52%20C84%2076%2069%2090%2050%2099%20C31%2090%2016%2076%2016%2052%20V24%20Z%27%20fill%3D%27none%27%20stroke%3D%27%23E6B947%27%20stroke-width%3D%277%27%20stroke-linejoin%3D%27round%27/%3E%3Cpath%20d%3D%27M34%2060%20L46%2073%20L68%2046%27%20fill%3D%27none%27%20stroke%3D%27%23E6B947%27%20stroke-width%3D%279%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #0A1B3D; }
+    #root { min-height: 100vh; }
+    /* simple pre-React splash so the screen is never blank while scripts load */
+    #boot { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #0A1B3D; color: #E6B947; font-family: Georgia, serif; font-size: 15px; letter-spacing: .04em; }
+  </style>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.28.4/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"><div id="boot">Loading your portal…</div></div>
+  <script type="text/babel" data-presets="react">
+const { useState, useRef, useEffect } = React;
+
+
+/* =============================================================
+   BUSINESS ENTITY, CREDIT & FUNDING PORTAL
+   Trust-navy base + gold / white / red accents. Playfair Display titles.
+
+   EASY-EDIT SPOTS (you only ever touch these):
+   1. BRAND_NAME .......... the name shown top-left + footer
+   2. CONTACT ............. footer email + location
+   3. LINKS ............... your four affiliate / portal links
+   4. SYSTEM_PROMPT ....... the AI advisor's personality + rules
+   5. AI_CONFIG ........... how the AI bot connects (preview vs. live)
+   ============================================================= */
+
+// 1) ---- Brand name ----
+const BRAND_NAME = "Your Business Advocate";
+
+// 2) ---- Footer contact (UPDATE the email to your real business email) ----
+const CONTACT = { email: "support@your-business-advocate.com", location: "Charlotte, NC" };
+
+// 3) ---- Your links (already filled in) ----
+const LINKS = {
+  formBusiness:
+    "https://www.awin1.com/cread.php?awinmid=88819&awinaffid=2827860&ued=https%3A%2F%2Fbizee.com",
+  fundingRoadmap: "https://blueprint.lendavo.com/?afmc=mm",
+  personalCredit: "https://www.your-credit-advocate.com/",
+  smartCredit: "https://www.smartcredit.com/?PID=51110",
+};
+
+// 5) ---- AI connection ----
+// PREVIEW MODE (true): the bot talks to Claude directly so you can test it here.
+// LIVE MODE (false):   on your live site, switch to false and put your Supabase
+//                      function web address in productionEndpoint.
+const AI_CONFIG = {
+  // LIVE SITE: stays false. Your secret key must live in a Supabase function, never here.
+  useDirectPreview: false,
+  // When your Supabase function is ready, paste its web address here (replace this whole line).
+  productionEndpoint: "https://YOUR-PROJECT.functions.supabase.co/entity-advisor",
+  // Friendly message shown until the secure AI backend is connected.
+  offlineMessage:
+    "Thanks so much for your question! Our AI advisor is being connected right now and will be ready very soon. In the meantime, the fastest way to get answers tailored to you is the free business assessment at the top of this page \u2014 it maps out your entity setup and your path to funding, and includes a complimentary consultation. Just tap one of the two path cards up top to begin. \ud83d\udc9b",
+};
+
+// 4) ---- The AI advisor's personality + guardrails ----
+const SYSTEM_PROMPT = `You are the Business Entity Advisor for an online business-building portal — a seasoned, calm, confident guide with years of experience helping entrepreneurs set up and structure their businesses. You sound like a supportive coach: warm, clear, and professional. Never stiff, never salesy.
+
+WHAT YOU HELP WITH (your only topics):
+- Entity types and when each fits: Sole Proprietorship, Partnership, LLC, S-Corp election, C-Corp — pros, cons, and plain-English differences.
+- Liability protection and separating personal from business.
+- General, non-specific tax-treatment differences between entities.
+- EINs, Operating Agreements, and Registered Agents — what they are and why they matter.
+- Privacy structuring, including the two-layer approach (a privacy-friendly state LLC such as Wyoming or New Mexico owning a local operating LLC).
+- What business credit is and why it matters, at a high level only.
+
+HOW YOU ANSWER:
+- Lead with the answer. Keep it to 2-5 short sentences, or 3-5 quick points for a list. No filler, no rambling, no long preamble.
+- Plain English. Define any term the moment you use it.
+- Be confident and encouraging — give a clear recommendation or next step when asked, framed as general education.
+- Use simple dashes for short lists. Never use markdown symbols like **, ##, or backticks.
+
+STAY IN YOUR LANE (redirect, don't drift):
+- Personal credit repair → point them to the sister company, Your Credit Advocate, linked on this page.
+- How to BUILD business credit (the steps, a plan, a roadmap) → do NOT give a do-it-yourself walkthrough. Point them to the free business assessment at the top of the page (Path 2), which maps it out for them.
+- Funding, loan amounts, or what they qualify for → point them to the free assessment at the top of the page.
+- Anything outside business entities, structures, formation, or foundational business credit → briefly say it's outside what you cover, and steer back.
+
+HARD RULES:
+- Educational information only. You are NOT a lawyer, CPA, or financial advisor, and you do NOT give legal, tax, or financial advice.
+- Never promise or guarantee any result, approval, funding amount, or timeline.
+- For anything specific to their situation, tell them to confirm with a licensed attorney or CPA.
+- Never name or claim affiliation with any outside company or brand. You are simply this portal's advisor.`;
+
+const STARTERS = [
+  "LLC vs. S-Corp — what's the difference?",
+  "Do I really need an EIN?",
+  "How does the two-layer LLC structure work?",
+  "First steps to build business credit?",
+];
+
+// ---- Testimonials ----
+const TESTIMONIALS = [
+  {
+    rating: 4,
+    quote: "Starting my LLC for my self-publishing company was a breeze using Your Business Advocate.",
+    initials: "C.S.",
+    source: "Charlisse, The Author",
+  },
+  {
+    rating: 4,
+    quote: "The easiest online instructions made building my business credit easy. The business advisers are with you every step of the way when you need them, too.",
+    initials: "B.D.",
+    source: "Big Boyz Games LLC",
+  },
+  {
+    rating: 5,
+    quote: "Love, love, love the patience of the support system. They communicate very effectively.",
+    initials: "N.M.",
+    source: "Tattoos Are Us",
+  },
+];
+
+// ---- Footer pop-up content (plain-English starter templates — have these
+//      reviewed by a professional before you rely on them) ----
+const LEGAL = {
+  privacy: {
+    title: "Privacy Policy",
+    sections: [
+      { h: "", p: [`Last updated: 2024. This Privacy Policy explains how ${BRAND_NAME} ("we," "us," or "our") handles information when you use this website. We respect your privacy and only collect what we need to help you.`] },
+      { h: "Information we collect", p: ["Information you choose to give us — such as your name, email, and business details — when you request a free assessment, book a consultation, or contact us.", "Basic, non-identifying usage information your browser shares automatically (like general device and page-visit data) that helps the site work and improve."] },
+      { h: "How we use your information", p: ["To respond to your requests, provide the education and tools on this site, connect you with the assessment and advisor services you ask for, and improve your experience. We do not sell your personal information."] },
+      { h: "Partner and affiliate links", p: ["Some links lead to trusted partners (such as business-formation, funding-assessment, and credit-report services). When you use those services, their own privacy policies apply. We may receive a commission at no extra cost to you."] },
+      { h: "Your choices", p: [`You can ask what information we have, or ask us to update or delete it, by emailing ${CONTACT.email}.`] },
+      { h: "Changes to this policy", p: ["We may update this policy from time to time. The most current version will always be posted here."] },
+    ],
+  },
+  terms: {
+    title: "Terms of Service",
+    sections: [
+      { h: "", p: [`Last updated: 2024. By using this website, you agree to these Terms. Please read them carefully.`] },
+      { h: "Educational purpose only", p: ["All content, tools, and AI responses on this site are for general education and information. They are not legal, tax, accounting, or financial advice, and using this site does not create a professional-client relationship."] },
+      { h: "No guarantees", p: ["We make no guarantee of any outcome — including business-formation results, credit improvement, or funding approval or amounts. Results vary from person to person."] },
+      { h: "Affiliate relationships", p: ["This site contains partner and affiliate links. We may earn a commission when you sign up through them, at no extra cost to you."] },
+      { h: "Your responsibilities", p: ["You agree to provide accurate information and to use this site lawfully. You are responsible for your own business and financial decisions, and for reviewing anything important with a qualified professional before acting."] },
+      { h: "Limitation of liability", p: ["To the fullest extent allowed by law, we are not liable for any loss arising from your use of this site or your reliance on its content."] },
+      { h: "Governing law", p: ["These Terms are governed by the laws of the State of North Carolina."] },
+    ],
+  },
+  disclaimer: {
+    title: "Important Disclaimer",
+    sections: [
+      { h: "", p: ["This platform provides business education and AI-generated guidance on entity formation, business structure, and funding readiness. This is NOT legal, tax, or financial advice."] },
+      { h: "", p: ["No specific results, approvals, or funding amounts are guaranteed. Every situation is different, and results vary."] },
+      { h: "", p: ["The AI advisor is an automated tool and can make mistakes. Always double-check any information it provides, and confirm important decisions with a qualified attorney, CPA, or financial professional before acting."] },
+      { h: "", p: ["Some links on this page are partner or affiliate links, and we may earn a commission at no extra cost to you."] },
+    ],
+  },
+  contact: {
+    title: "Contact Us",
+    contact: true,
+    sections: [
+      { h: "", p: ["We'd love to hear from you. Whether you have a question about getting started, your assessment, or working on your credit, reach out any time."] },
+      { h: "Email", p: [CONTACT.email] },
+      { h: "Location", p: [CONTACT.location] },
+    ],
+  },
+};
+
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --navy:#0A1B3D; --navy-2:#0C2149; --surface:#102A57; --surface-2:#16356B;
+  --gold:#E6B947; --gold-soft:#F2CF6E; --red:#E0485A; --red-deep:#C8102E;
+  --white:#ECF2FC; --muted:#9DB2D6; --green:#2DD46A; --green-soft:#5CE894;
+  --line:rgba(157,178,214,0.16); --gold-line:rgba(230,185,71,0.22);
+}
+*{box-sizing:border-box;}
+.bfp{ background:var(--navy); color:var(--white);
+  font-family:'Inter',system-ui,sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+.bfp h1,.bfp h2,.bfp h3,.bfp .display{ font-family:'Playfair Display',Georgia,serif; line-height:1.16; letter-spacing:-0.005em; }
+.bfp a{ color:inherit; text-decoration:none; }
+.wrap{ max-width:1120px; margin:0 auto; padding:0 24px; }
+.eyebrow{ font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+
+/* NAV */
+.nav{ position:sticky; top:0; z-index:50; background:rgba(10,27,61,0.85);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+.nav-inner{ display:flex; align-items:center; justify-content:space-between; height:70px; }
+.brand{ display:flex; align-items:center; gap:12px; font-family:'Playfair Display',serif; font-weight:700; font-size:21px; }
+.brand-mark{ width:34px; height:34px; border-radius:9px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--gold),#c79a26); color:#0A1B3D; font-weight:800; font-size:16px; font-family:'Inter',sans-serif; }
+.nav-links{ display:flex; gap:30px; font-size:14px; color:var(--muted); font-weight:500; }
+.nav-links a{ cursor:pointer; }
+.nav-links a:hover{ color:var(--gold); }
+@media(max-width:820px){ .nav-links{ display:none; } }
+
+/* BUTTONS — yellow text + yellow illuminating glow outline */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:13px 26px;
+  border-radius:11px; font-family:'Inter',sans-serif; font-weight:800; font-size:15px; letter-spacing:.01em;
+  cursor:pointer; background:transparent; color:var(--gold); border:2px solid var(--gold);
+  box-shadow:0 0 14px rgba(230,185,71,0.42), inset 0 0 10px rgba(230,185,71,0.08); transition:.18s; }
+.btn:hover{ transform:translateY(-2px); background:rgba(230,185,71,0.10);
+  box-shadow:0 0 26px rgba(230,185,71,0.65), inset 0 0 14px rgba(230,185,71,0.14); }
+.btn-gold,.btn-green,.btn-ghost{ color:var(--gold); border-color:var(--gold); }
+.btn-red{ color:var(--red); border-color:var(--red);
+  box-shadow:0 0 14px rgba(224,72,90,0.5), inset 0 0 10px rgba(224,72,90,0.08); }
+.btn-red:hover{ transform:translateY(-2px); background:rgba(224,72,90,0.12);
+  box-shadow:0 0 26px rgba(224,72,90,0.72), inset 0 0 14px rgba(224,72,90,0.14); }
+
+/* HERO */
+.hero{ position:relative; overflow:hidden; padding:78px 0 40px;
+  background:radial-gradient(1000px 480px at 50% -10%, rgba(230,185,71,0.10), transparent 65%); }
+.hero .wrap{ position:relative; z-index:1; }
+.hero .orb{ position:absolute; border-radius:50%; filter:blur(64px); z-index:0; pointer-events:none; }
+.hero .orb1{ width:440px; height:440px; background:radial-gradient(circle, rgba(230,185,71,0.30), transparent 70%); top:-130px; left:-70px; animation:drift1 15s ease-in-out infinite; }
+.hero .orb2{ width:380px; height:380px; background:radial-gradient(circle, rgba(45,212,106,0.16), transparent 70%); bottom:-160px; right:-50px; animation:drift2 19s ease-in-out infinite; }
+@keyframes drift1{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(60px,40px); } }
+@keyframes drift2{ 0%,100%{ transform:translate(0,0); } 50%{ transform:translate(-50px,-30px); } }
+.scroll-cue{ display:flex; flex-direction:column; align-items:center; gap:7px; margin:42px auto 0; background:transparent; border:none; cursor:pointer; color:var(--muted); font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; transition:color .2s ease; }
+.scroll-cue:hover{ color:var(--gold); }
+.scroll-cue .chev{ width:24px; height:24px; animation:bob 1.7s ease-in-out infinite; }
+@keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(7px); } }
+.trust{ display:inline-flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:20px; }
+.trust-stars{ color:var(--gold); letter-spacing:2px; font-size:15px; }
+.trust-text{ color:var(--green-soft); font-style:italic; font-weight:600; font-size:clamp(14px,2vw,18px); text-shadow:0 0 16px rgba(45,212,106,0.6); }
+.hero-head{ text-align:center; max-width:none; margin:0 auto 52px; }
+.hero h1{ font-size:clamp(34px,6.6vw,76px); font-weight:800; margin:6px 0 22px; line-height:1.06; }
+.hero h1 em{ color:var(--gold-soft); font-style:normal; }
+.hero-build{ font-family:'Playfair Display',Georgia,serif; font-size:clamp(22px,3.6vw,40px); font-weight:600; color:var(--white); margin:0 0 20px; line-height:1.15; }
+.rot{ display:inline-block; white-space:nowrap; color:var(--gold-soft); font-style:italic; animation:wordIn .5s ease; }
+@keyframes wordIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+.hero-head p{ color:var(--muted); font-size:clamp(16px,2vw,19px); margin:0 auto; max-width:62ch; }
+
+.paths-cue{ text-align:center; color:var(--gold); font-size:12px; letter-spacing:.2em; text-transform:uppercase; font-weight:700; margin:0 0 18px; }
+.path-motif{ position:absolute; top:-10px; right:-16px; width:152px; height:auto; opacity:.12; pointer-events:none; z-index:0; }
+.path > :not(.path-motif){ position:relative; z-index:1; }
+
+/* TWO PATHS */
+.paths{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+@media(max-width:860px){ .paths{ grid-template-columns:1fr; } }
+.path{ position:relative; background:var(--surface); border:1px solid var(--line);
+  border-radius:20px; padding:38px 34px; display:flex; flex-direction:column; transition:.2s; overflow:hidden; }
+.path:hover{ transform:translateY(-3px); border-color:var(--gold-line); }
+.path::before{ content:""; position:absolute; inset:0 0 auto 0; height:4px;
+  background:linear-gradient(90deg, var(--gold-soft), var(--gold) 45%, var(--red)); }
+.path .num{ font-family:'Inter',sans-serif; font-size:13px; font-weight:700;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--gold); margin-bottom:14px; }
+.path h2{ font-size:28px; font-weight:700; margin:0 0 12px; }
+.path > p{ color:var(--muted); font-size:15.5px; margin:0 0 22px; flex:0 0 auto; }
+.path .spacer{ flex:1 1 auto; }
+.checks{ list-style:none; padding:0; margin:0 0 26px; display:flex; flex-direction:column; gap:11px; }
+.checks li{ display:flex; gap:11px; font-size:14.5px; color:var(--white); align-items:flex-start; }
+.check{ flex:0 0 auto; width:20px; height:20px; border-radius:50%; margin-top:1px;
+  background:rgba(45,212,106,0.16); display:grid; place-items:center; color:var(--green-soft); }
+.path .btn{ width:100%; }
+
+/* SECTIONS */
+.section{ padding:72px 0; border-top:1px solid var(--line); }
+.section-head{ max-width:62ch; margin:0 auto 36px; text-align:center; }
+.section-head h2{ font-size:clamp(28px,4vw,42px); font-weight:700; margin:13px 0 12px; }
+.section-head p{ color:var(--muted); font-size:16px; }
+.section-head .big-q{ color:#FFFFFF; font-size:clamp(24px,4vw,42px); font-weight:800; line-height:1.12; margin:0 0 14px; }
+.section-head .gold-line{ color:var(--gold); font-family:'Playfair Display',Georgia,serif; font-style:italic; font-size:clamp(19px,2.6vw,28px); margin:0 0 14px; }
+.section-head .formula{ font-size:clamp(15px,2vw,19px); margin:0 0 14px; line-height:1.5; }
+.section-head .formula .term{ color:#FFFFFF; font-style:italic; font-weight:600; }
+.section-head .formula .op{ color:var(--gold); font-weight:800; padding:0 2px; }
+.section-head .formula .eq{ color:var(--green-soft); font-weight:700; font-style:italic; }
+
+/* CREDIT CARDS */
+.cards{ display:grid; grid-template-columns:1.05fr 1fr; gap:22px; align-items:stretch; }
+@media(max-width:820px){ .cards{ grid-template-columns:1fr; } }
+
+/* 3 C's */
+.threecs{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:30px; }
+@media(max-width:680px){ .threecs{ grid-template-columns:1fr; } }
+.cc{ background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px; text-align:center; }
+.cc-letter{ font-family:'Playfair Display',Georgia,serif; font-size:34px; font-weight:800; color:var(--muted); line-height:1; margin-bottom:8px; }
+.cc-name{ font-weight:700; font-size:17px; color:var(--white); margin-bottom:5px; }
+.cc-desc{ font-size:13px; color:var(--muted); }
+.cc-active{ border-color:var(--gold); background:rgba(230,185,71,0.06); box-shadow:0 0 22px rgba(230,185,71,0.28); }
+.cc-active .cc-letter,.cc-active .cc-name{ color:var(--gold); }
+
+/* TESTIMONIALS */
+.tcards{ display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+@media(max-width:820px){ .tcards{ grid-template-columns:1fr; } }
+.tcard{ background:var(--surface); border:1.5px solid rgba(230,185,71,0.45); border-radius:18px; padding:28px 26px; display:flex; flex-direction:column; box-shadow:0 0 0 1px rgba(230,185,71,0.14), 0 0 26px rgba(230,185,71,0.28); }
+.stars{ display:flex; gap:3px; margin-bottom:14px; font-size:18px; line-height:1; }
+.tcard .quote{ font-size:15px; line-height:1.7; color:#E2E8F3; margin:0 0 18px; flex:1 1 auto; font-style:italic; }
+.tcard .who{ font-weight:700; color:var(--gold); font-size:14px; }
+.tcard .who span{ display:block; color:var(--muted); font-weight:500; font-size:12.5px; margin-top:3px; font-style:normal; }
+
+/* CONTACT */
+.contact-grid{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+@media(max-width:760px){ .contact-grid{ grid-template-columns:1fr; } }
+.contact-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:30px; display:flex; flex-direction:column; }
+.contact-card h3{ font-size:21px; font-weight:700; margin:0 0 8px; }
+.contact-card p{ color:var(--muted); font-size:15px; margin:0 0 22px; flex:1 1 auto; }
+.contact-card .btn{ align-self:flex-start; }
+
+/* SMARTCREDIT — GREEN GLOW + $1 / 7 DAYS */
+.glow{ position:relative; border:1.5px solid var(--green); border-radius:18px; padding:32px;
+  background:linear-gradient(180deg, rgba(45,212,106,0.07), rgba(16,42,87,0.55));
+  box-shadow:0 0 0 1px rgba(45,212,106,0.22), 0 0 30px rgba(45,212,106,0.3), inset 0 0 24px rgba(45,212,106,0.07);
+  animation:pulse 3.2s ease-in-out infinite; display:flex; flex-direction:column; }
+.glow h3{ font-size:24px; font-weight:700; margin:0 0 8px; }
+.glow .lead{ color:#C9D6EC; font-size:15px; margin:0 0 16px; flex:1 1 auto; }
+.price{ display:flex; align-items:baseline; gap:10px; margin-bottom:20px; }
+.price .amount{ font-family:'Playfair Display',Georgia,serif; font-size:42px; font-weight:800; color:#fff; line-height:1; }
+.price .amount .cur{ font-size:0.5em; font-weight:700; vertical-align:0.7em; margin-right:1px; }
+.price .sub{ color:var(--green-soft); font-size:14px; font-weight:600; }
+@keyframes pulse{
+  0%,100%{ box-shadow:0 0 0 1px rgba(45,212,106,0.20), 0 0 24px rgba(45,212,106,0.24), inset 0 0 20px rgba(45,212,106,0.06); }
+  50%{ box-shadow:0 0 0 1px rgba(45,212,106,0.42), 0 0 44px rgba(45,212,106,0.5), inset 0 0 28px rgba(45,212,106,0.12); }
+}
+
+/* GOLD GLOW — black box, yellow glowing frame */
+.glow-gold{ position:relative; border:1.5px solid var(--gold); border-radius:18px; padding:32px;
+  background:#070709; color:#fff; display:flex; flex-direction:column;
+  box-shadow:0 0 0 1px rgba(230,185,71,0.25), 0 0 30px rgba(230,185,71,0.34), inset 0 0 24px rgba(230,185,71,0.05);
+  animation:pulseGold 3.4s ease-in-out infinite; }
+.glow-gold h3{ font-size:24px; font-weight:700; margin:0 0 8px; color:#fff; }
+.glow-gold .lead{ color:#FFFFFF; font-size:15px; margin:0 0 22px; flex:1 1 auto; }
+@keyframes pulseGold{
+  0%,100%{ box-shadow:0 0 0 1px rgba(230,185,71,0.22), 0 0 24px rgba(230,185,71,0.26), inset 0 0 20px rgba(230,185,71,0.05); }
+  50%{ box-shadow:0 0 0 1px rgba(230,185,71,0.46), 0 0 46px rgba(230,185,71,0.58), inset 0 0 28px rgba(230,185,71,0.10); }
+}
+@media(prefers-reduced-motion:reduce){ .glow,.glow-gold,.disc-card,.hero .orb,.rot,.msg,.typing-dots i,.scroll-cue .chev{ animation:none; } }
+
+/* AI ADVISOR */
+.chat{ background:var(--navy-2); border:1px solid var(--line); border-radius:20px; overflow:hidden; }
+.chat-top{ display:flex; align-items:center; gap:13px; padding:20px 24px; border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(230,185,71,0.07), transparent); }
+.chat-top .name{ font-family:'Playfair Display',serif; font-weight:700; font-size:18px; }
+.chat-top .role{ font-size:12.5px; color:var(--muted); }
+.chat-tools{ margin-left:auto; display:flex; align-items:center; gap:13px; }
+.chat-reset{ background:transparent; border:1px solid var(--gold-line); color:var(--muted); font-size:12px;
+  font-weight:600; padding:6px 12px; border-radius:8px; cursor:pointer; font-family:'Inter',sans-serif; transition:.16s; }
+.chat-reset:hover{ border-color:var(--gold); color:var(--gold); }
+.dot{ width:9px; height:9px; border-radius:50%; background:var(--green); box-shadow:0 0 9px var(--green); }
+.chat-disc{ font-size:12.5px; color:#C0CFE8; padding:11px 24px; background:rgba(224,72,90,0.10); border-bottom:1px solid var(--line); }
+.chat-disc b{ color:var(--gold-soft); font-weight:700; }
+.chat-body{ height:380px; overflow-y:auto; padding:22px 24px; display:flex; flex-direction:column; gap:14px; }
+.chat-body::-webkit-scrollbar{ width:8px; }
+.chat-body::-webkit-scrollbar-thumb{ background:rgba(157,178,214,0.25); border-radius:4px; }
+.chat-body::-webkit-scrollbar-track{ background:transparent; }
+.msg{ max-width:82%; padding:13px 17px; border-radius:15px; font-size:15px; white-space:pre-wrap; animation:msgIn .25s ease; }
+.msg.bot{ align-self:flex-start; background:var(--surface); border:1px solid var(--line); border-bottom-left-radius:5px; }
+.msg.me{ align-self:flex-end; background:linear-gradient(135deg,var(--gold),#cda231); color:#0A1B3D; font-weight:500; border-bottom-right-radius:5px; }
+@keyframes msgIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+.typing-dots{ display:inline-flex; gap:5px; align-items:center; padding:2px 0; }
+.typing-dots i{ width:7px; height:7px; border-radius:50%; background:var(--muted); animation:blink 1.2s infinite ease-in-out; }
+.typing-dots i:nth-child(2){ animation-delay:.18s; }
+.typing-dots i:nth-child(3){ animation-delay:.36s; }
+@keyframes blink{ 0%,80%,100%{ opacity:.25; transform:translateY(0); } 40%{ opacity:1; transform:translateY(-3px); } }
+.chips{ display:flex; flex-wrap:wrap; gap:9px; padding:0 24px 14px; }
+.chip{ font-size:13px; color:var(--gold); border:1px solid var(--gold-line); border-radius:999px;
+  padding:8px 14px; cursor:pointer; background:transparent; font-family:'Inter',sans-serif; transition:.16s; }
+.chip:hover{ border-color:var(--gold); background:rgba(230,185,71,0.09); }
+.chat-input{ display:flex; gap:10px; padding:16px 24px; border-top:1px solid var(--line); }
+.chat-input input{ flex:1; background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  color:var(--white); padding:13px 15px; font-size:15px; font-family:'Inter',sans-serif; outline:none; }
+.chat-input input:focus{ border-color:var(--gold); }
+.chat-input input::placeholder{ color:#7E92B6; }
+.send{ background:transparent; color:var(--gold); border:2px solid var(--gold); border-radius:12px;
+  padding:0 22px; font-weight:800; cursor:pointer; font-family:'Inter',sans-serif; transition:.18s;
+  box-shadow:0 0 12px rgba(230,185,71,0.38); }
+.send:hover{ background:rgba(230,185,71,0.12); box-shadow:0 0 22px rgba(230,185,71,0.6); }
+.send:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
+
+/* FOOTER (matches Your Credit Advocate) */
+.footer{ background:#070709; }
+.disc-band{ background:#070709; padding:42px 0 34px; }
+.disc-card{ max-width:1000px; margin:0 auto; background:#0B0B11; border:1.5px solid var(--red-deep); border-radius:16px;
+  padding:24px 30px; box-shadow:0 0 0 1px rgba(200,16,46,0.25), 0 0 30px rgba(200,16,46,0.42), inset 0 0 22px rgba(200,16,46,0.06);
+  animation:pulseRed 3.6s ease-in-out infinite; }
+.disc-title{ display:flex; align-items:center; gap:9px; font-family:'Playfair Display',Georgia,serif; font-weight:700;
+  font-size:18px; color:#fff; margin:0 0 11px; }
+.disc-title svg{ color:var(--gold); flex:0 0 auto; }
+.disc-card p{ margin:0; font-size:13px; line-height:1.75; color:#E2E8F3; }
+@keyframes pulseRed{
+  0%,100%{ box-shadow:0 0 0 1px rgba(200,16,46,0.22), 0 0 24px rgba(200,16,46,0.30), inset 0 0 20px rgba(200,16,46,0.05); }
+  50%{ box-shadow:0 0 0 1px rgba(200,16,46,0.48), 0 0 46px rgba(200,16,46,0.62), inset 0 0 28px rgba(200,16,46,0.10); }
+}
+.foot-main{ display:flex; justify-content:space-between; align-items:flex-start; gap:24px; padding:34px 0 18px; flex-wrap:wrap; }
+.foot-name{ font-family:'Playfair Display',serif; font-weight:700; color:var(--gold); font-size:15px; letter-spacing:0.16em; text-transform:uppercase; }
+.foot-contact{ font-size:13px; color:#8C97AE; margin-top:7px; }
+.foot-links{ display:flex; gap:26px; flex-wrap:wrap; }
+.foot-links a{ font-size:13.5px; color:#C4CDDF; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.foot-links a:hover{ color:var(--gold); }
+.foot-bottom{ display:flex; justify-content:space-between; gap:16px; padding:16px 0 42px; flex-wrap:wrap;
+  border-top:1px solid rgba(157,178,214,0.08); margin-top:6px; }
+.foot-bottom span{ font-size:12px; color:#6F7A91; }
+/* MODAL (footer pop-ups) */
+.modal-overlay{ position:fixed; inset:0; z-index:100; background:rgba(4,8,18,0.8); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; padding:24px; }
+.modal{ background:var(--navy-2); border:1px solid var(--gold-line); border-radius:18px; max-width:640px; width:100%;
+  max-height:85vh; display:flex; flex-direction:column; box-shadow:0 24px 60px rgba(0,0,0,0.55); }
+.modal-head{ display:flex; align-items:center; justify-content:space-between; padding:22px 26px; border-bottom:1px solid var(--line); }
+.modal-head h3{ font-family:'Playfair Display',Georgia,serif; font-size:23px; font-weight:700; color:var(--gold); margin:0; }
+.modal-close{ background:transparent; border:1px solid var(--gold-line); color:var(--white); width:34px; height:34px;
+  border-radius:9px; cursor:pointer; font-size:20px; line-height:1; display:grid; place-items:center; }
+.modal-close:hover{ border-color:var(--gold); color:var(--gold); }
+.modal-body{ overflow-y:auto; padding:24px 26px 28px; }
+.modal-body h4{ font-family:'Inter',sans-serif; font-size:14px; font-weight:700; color:var(--gold-soft); margin:18px 0 7px; }
+.modal-body h4:first-child{ margin-top:0; }
+.modal-body p{ font-size:14px; line-height:1.7; color:#D7DEEC; margin:0 0 12px; }
+
+/* LOADER (entrance screen) */
+.loader{ position:fixed; inset:0; z-index:200; background:var(--navy); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:18px; transition:opacity .5s ease; }
+.loader--out{ opacity:0; pointer-events:none; }
+.loader-mark{ width:60px; height:60px; border-radius:14px; display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--gold),#c79a26); color:#0A1B3D; font-weight:800; font-size:28px; font-family:'Inter',sans-serif; }
+.loader-name{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:22px; color:#fff; }
+.loader-track{ width:min(260px,70vw); height:6px; background:rgba(157,178,214,0.18); border-radius:99px; overflow:hidden; }
+.loader-fill{ height:100%; background:linear-gradient(90deg, var(--gold-soft), var(--gold) 50%, var(--red)); border-radius:99px; transition:width .12s linear; }
+.loader-text{ font-size:13px; color:var(--muted); letter-spacing:.04em; }
+:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+@media(max-width:560px){
+  .hero{ padding:54px 0 26px; }
+  .section{ padding:52px 0; }
+  .path{ padding:30px 24px; }
+  .glow,.glow-gold{ padding:26px 22px; }
+  .chat-body{ height:340px; }
+  .disc-card{ padding:20px 20px; }
+  .foot-main{ gap:18px; }
+}
+.hero,.section{ scroll-margin-top:84px; }
+`;
+
+function scrollToId(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function Arrow() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="7" y1="17" x2="17" y2="7" /><polyline points="7 7 17 7 17 17" />
+    </svg>
+  );
+}
+function Check() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+function Stars({ rating }) {
+  if (!rating) return null;
+  return (
+    <div className="stars" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <span key={n} style={{ color: n <= rating ? "var(--gold)" : "rgba(157,178,214,0.28)" }}>★</span>
+      ))}
+    </div>
+  );
+}
+function RotatingWord({ words, interval = 2100 }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI((p) => (p + 1) % words.length), interval);
+    return () => clearInterval(id);
+  }, [words.length, interval]);
+  return <span className="rot" key={i}>{words[i]}</span>;
+}
+
+function ShieldMark({ size = 34 }) {
+  return (
+    <svg width={size} height={Math.round(size * 1.08)} viewBox="0 0 100 110" aria-label="Your Business Advocate" style={{ display: "block", flex: "0 0 auto" }}>
+      <path d="M50 8 L88 22 V52 C88 78 72 92 50 102 C28 92 12 78 12 52 V22 Z" fill="none" stroke="#E6B947" strokeWidth="5" strokeLinejoin="round" />
+      <path d="M50 17 L79 28 V52 C79 72 67 84 50 91" fill="none" stroke="#E0485A" strokeWidth="3" strokeLinecap="round" />
+      <g fill="#ECF2FC"><rect x="33" y="54" width="8" height="16" /><rect x="46" y="46" width="8" height="24" /><rect x="59" y="38" width="8" height="32" /></g>
+      <path d="M33 64 L46 77 L70 46" fill="none" stroke="#E6B947" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function LadderMotif() {
+  return (
+    <svg className="path-motif" viewBox="0 0 110 100" aria-hidden="true">
+      <g fill="#E6B947"><rect x="8" y="74" width="18" height="18" /><rect x="27" y="62" width="18" height="30" /><rect x="46" y="50" width="18" height="42" /><rect x="65" y="38" width="18" height="54" /></g>
+      <path d="M14 78 C42 72 64 50 94 22" fill="none" stroke="#E0485A" strokeWidth="6" strokeLinecap="round" />
+      <path d="M82 18 L98 16 L92 31 Z" fill="#E0485A" />
+    </svg>
+  );
+}
+
+function BuildingsMotif() {
+  return (
+    <svg className="path-motif" viewBox="0 0 64 64" aria-hidden="true">
+      <line x1="24" y1="17" x2="24" y2="11" stroke="#E6B947" strokeWidth="2" />
+      <path d="M24 11 l7 2.2 -7 2.2 z" fill="#E0485A" />
+      <rect x="14" y="17" width="20" height="37" rx="2" fill="none" stroke="#E6B947" strokeWidth="3" />
+      <rect x="36" y="27" width="15" height="27" rx="2" fill="none" stroke="#E6B947" strokeWidth="3" />
+      <g fill="#E6B947">
+        <rect x="19" y="23" width="3" height="3" /><rect x="26" y="23" width="3" height="3" />
+        <rect x="19" y="30" width="3" height="3" /><rect x="26" y="30" width="3" height="3" />
+        <rect x="19" y="37" width="3" height="3" /><rect x="26" y="37" width="3" height="3" />
+        <rect x="40" y="33" width="3" height="3" /><rect x="45" y="33" width="3" height="3" />
+        <rect x="40" y="40" width="3" height="3" /><rect x="45" y="40" width="3" height="3" />
+      </g>
+      <line x1="9" y1="54" x2="55" y2="54" stroke="#E6B947" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function BizCelebrateRemoved() { return null; }
+function Warn() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+function Modal({ data, onClose }) {
+  useEffect(() => {
+    if (!data) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [data, onClose]);
+  if (!data) return null;
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="modal-head">
+          <h3>{data.title}</h3>
+          <button className="modal-close" onClick={onClose} aria-label="Close">×</button>
+        </div>
+        <div className="modal-body">
+          {data.sections.map((s, i) => (
+            <div key={i}>
+              {s.h ? <h4>{s.h}</h4> : null}
+              {s.p.map((para, j) => <p key={j}>{para}</p>)}
+            </div>
+          ))}
+          {data.contact ? (
+            <a className="btn btn-gold" href={`mailto:${CONTACT.email}`} style={{ marginTop: 6 }}>Email us</a>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const GREETING = {
+  role: "assistant",
+  content:
+    "Hi — I'm your Business AI Entity Advisor. Ask me anything about LLCs, S-corps, EINs, privacy structures, or building business credit, and I'll keep it clear and simple. What are you looking to set up?",
+};
+
+function ConsultantChat() {
+  const [messages, setMessages] = useState([GREETING]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bodyRef = useRef(null);
+
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  function resetChat() {
+    setMessages([GREETING]);
+    setInput("");
+  }
+
+  async function send(text) {
+    const content = (text ?? input).trim();
+    if (!content || loading) return;
+    const next = [...messages, { role: "user", content }];
+    setMessages(next);
+    setInput("");
+    setLoading(true);
+
+    // Not connected to a secure backend yet -> warm fallback, no error.
+    if (!AI_CONFIG.useDirectPreview && AI_CONFIG.productionEndpoint.indexOf("YOUR-PROJECT") !== -1) {
+      setTimeout(() => {
+        setMessages([...next, { role: "assistant", content: AI_CONFIG.offlineMessage }]);
+        setLoading(false);
+      }, 650);
+      return;
+    }
+
+    try {
+      let reply = "";
+      if (AI_CONFIG.useDirectPreview) {
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "claude-sonnet-4-6",
+            max_tokens: 1000,
+            system: SYSTEM_PROMPT,
+            messages: next.map((m) => ({ role: m.role, content: m.content })),
+          }),
+        });
+        const data = await res.json();
+        reply = (data.content || []).map((i) => i.text || "").join("\n").trim();
+      } else {
+        const res = await fetch(AI_CONFIG.productionEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: next }),
+        });
+        const data = await res.json();
+        reply = data.reply || data.content || "";
+      }
+      setMessages([...next, { role: "assistant", content: reply || "Sorry, I didn't catch that — could you ask again?" }]);
+    } catch (e) {
+      setMessages([...next, { role: "assistant", content: "I'm having trouble connecting right now. Please try again in a moment." }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="chat">
+      <div className="chat-top">
+        <div className="chat-id">
+          <div className="name">Business AI Entity Advisor</div>
+          <div className="role">Seasoned structuring &amp; formation guide</div>
+        </div>
+        <div className="chat-tools">
+          <span className="dot" title="Online" />
+          {messages.length > 1 && (
+            <button className="chat-reset" onClick={resetChat} aria-label="Start a new chat">New chat</button>
+          )}
+        </div>
+      </div>
+      <div className="chat-disc">
+        <b>AI can make mistakes.</b> Please double-check important information.
+      </div>
+      <div className="chat-body" ref={bodyRef}>
+        {messages.map((m, i) => (
+          <div key={i} className={`msg ${m.role === "user" ? "me" : "bot"}`}>{m.content}</div>
+        ))}
+        {loading && (
+          <div className="msg bot"><span className="typing-dots"><i /><i /><i /></span></div>
+        )}
+      </div>
+      {messages.length <= 1 && (
+        <div className="chips">
+          {STARTERS.map((q) => (
+            <button key={q} className="chip" onClick={() => send(q)}>{q}</button>
+          ))}
+        </div>
+      )}
+      <div className="chat-input">
+        <input
+          value={input}
+          placeholder="Ask about entities, structures, or business credit…"
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") send(); }}
+          aria-label="Ask the business entity advisor"
+        />
+        <button className="send" onClick={() => send()} disabled={loading || !input.trim()}>Send</button>
+      </div>
+    </div>
+  );
+}
+
+function BusinessFundingPortal() {
+  const [modal, setModal] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
+  const [gone, setGone] = useState(false);
+
+  useEffect(() => {
+    const start = performance.now();
+    const dur = 1700;
+    let raf;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / dur);
+      setProgress(Math.round(t * 100));
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else { setFadeOut(true); setTimeout(() => setGone(true), 500); }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  useEffect(() => {
+    document.title = BRAND_NAME;
+    const fav = "data:image/svg+xml," + encodeURIComponent(
+      "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 110'><rect width='100' height='110' rx='16' fill='#0A1B3D'/><path d='M50 12 L84 24 V52 C84 76 69 90 50 99 C31 90 16 76 16 52 V24 Z' fill='none' stroke='#E6B947' stroke-width='7' stroke-linejoin='round'/><path d='M34 60 L46 73 L68 46' fill='none' stroke='#E6B947' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    );
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+    link.setAttribute("type", "image/svg+xml");
+    link.setAttribute("href", fav);
+  }, []);
+
+  return (
+    <div className="bfp">
+      <style>{STYLES}</style>
+
+      {!gone && (
+        <div className={`loader ${fadeOut ? "loader--out" : ""}`}>
+          <ShieldMark size={60} />
+          <div className="loader-name">{BRAND_NAME}</div>
+          <div className="loader-track"><div className="loader-fill" style={{ width: `${progress}%` }} /></div>
+          <div className="loader-text">Loading your portal… {progress}%</div>
+        </div>
+      )}
+
+      {/* NAV */}
+      <nav className="nav">
+        <div className="wrap nav-inner">
+          <div className="brand"><ShieldMark size={36} />{BRAND_NAME}</div>
+          <div className="nav-links">
+            <a onClick={() => scrollToId("start")}>Get Started</a>
+            <a onClick={() => scrollToId("credit")}>Your Credit</a>
+            <a onClick={() => scrollToId("advisor")}>Ask the Advisor</a>
+            <a onClick={() => scrollToId("testimonials")}>Reviews</a>
+            <a onClick={() => scrollToId("contact")}>Contact</a>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO + TWO PATHS */}
+      <header className="hero" id="start">
+        <div className="orb orb1" />
+        <div className="orb orb2" />
+        <div className="wrap">
+          <div className="hero-head">
+            <div className="trust">
+              <span className="trust-text">Helping thousands of new and seasoned business owners get the funding they deserve</span>
+            </div>
+            <h1>Let's build your<br /><RotatingWord words={["LLC", "business credit", "legacy"]} /></h1>
+            <p>From forming your entity to funding the business you already have — wherever you are, we can help.</p>
+          </div>
+
+          <p className="paths-cue">Where are you right now?</p>
+          <div className="paths">
+            {/* PATH 1 — START A BUSINESS */}
+            <div className="path">
+              <BuildingsMotif />
+              <div className="num">Path 1 · Start a business</div>
+              <h2>I need to form my business</h2>
+              <p>New to this? Start here. Forming an LLC creates a legal wall between you and your business — protecting your personal name and assets. It's fast, affordable, and the very first step every owner takes.</p>
+              <ul className="checks">
+                <li><span className="check"><Check /></span>Separate your personal and business life</li>
+                <li><span className="check"><Check /></span>Protect your name and personal assets</li>
+                <li><span className="check"><Check /></span>Build the foundation for business credit</li>
+              </ul>
+              <div className="spacer" />
+              <a className="btn btn-gold" href={LINKS.formBusiness} target="_blank" rel="noopener noreferrer">
+                Form my business <Arrow />
+              </a>
+            </div>
+
+            {/* PATH 2 — FUNDING */}
+            <div className="path">
+              <LadderMotif />
+              <div className="num">Path 2 · Credit &amp; funding</div>
+              <h2>I have a business — fund it</h2>
+              <p>Already have a business? Start with a free assessment. Tell us a little about your business and here's what happens next:</p>
+              <ul className="checks">
+                <li><span className="check"><Check /></span>Our AI analyzes your business and shows what you qualify for right now</li>
+                <li><span className="check"><Check /></span>You get a complimentary consultation with a funding advisor</li>
+                <li><span className="check"><Check /></span>Together you build a clear roadmap to funding</li>
+              </ul>
+              <div className="spacer" />
+              <a className="btn btn-gold" href={LINKS.fundingRoadmap} target="_blank" rel="noopener noreferrer">
+                Start my free assessment <Arrow />
+              </a>
+            </div>
+          </div>
+          <button className="scroll-cue" onClick={() => scrollToId("credit")} aria-label="Scroll down to see more options">
+            <span>Keep scrolling — see all your options</span>
+            <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+          </button>
+        </div>
+      </header>
+
+      {/* CREDIT */}
+      <section className="section" id="credit">
+        <div className="wrap">
+          <div className="section-head">
+            <p className="formula"><span className="term">Credit</span> <span className="op">+</span> <span className="term">Collateral</span> <span className="op">+</span> <span className="term">Cash Flow</span> <span className="eq">= the 3 C's of funding</span></p>
+            <h2 className="big-q">Been denied for a <RotatingWord words={["personal loan", "personal credit card", "business loan", "business credit card"]} /></h2>
+          </div>
+
+          <div className="cards">
+            {/* SMARTCREDIT — GREEN GLOW + $1 / 7 DAYS */}
+            <div className="glow">
+              <h3>Pull your 3-bureau credit report</h3>
+              <p className="lead">See exactly what lenders see — all three bureaus in one place. The fastest way to know where you stand.</p>
+              <a className="btn btn-green" href={LINKS.smartCredit} target="_blank" rel="noopener noreferrer">
+                Get my report — $1 for 7 days <Arrow />
+              </a>
+            </div>
+
+            {/* PERSONAL CREDIT REFERRAL — black box, gold glow, red button, white text */}
+            <div className="glow-gold">
+              <h3>Meet our AI-powered sister company</h3>
+              <p className="lead">Your Credit Advocate puts AI to work — pinpointing exactly what's holding your score back and how to fix it. Trust them with your credit, and you'll return ready to get funded.</p>
+              <a className="btn btn-red" href={LINKS.personalCredit} target="_blank" rel="noopener noreferrer">
+                Visit Your Credit Advocate <Arrow />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* AI ADVISOR */}
+      <section className="section" id="advisor">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="eyebrow">Entity &amp; structure questions</span>
+            <h2>Your Business AI Entity Advisor.</h2>
+            <p>A seasoned guide on entities and structures, available any time. Ask about LLCs vs. corporations, privacy structures, EINs, or how to start building business credit.</p>
+          </div>
+          <ConsultantChat />
+        </div>
+      </section>
+
+      {/* TESTIMONIALS */}
+      <section className="section" id="testimonials">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="eyebrow">What people are saying</span>
+            <h2>Real entrepreneurs, real beginnings.</h2>
+            <p>Here's what business owners have to say about getting started with us.</p>
+          </div>
+          <div className="tcards">
+            {TESTIMONIALS.map((t, i) => (
+              <div className="tcard" key={i}>
+                <Stars rating={t.rating} />
+                <p className="quote">&ldquo;{t.quote}&rdquo;</p>
+                <div className="who">{t.initials}<span>{t.source}</span></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT & SUPPORT */}
+      <section className="section" id="contact">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="eyebrow">Contact &amp; support</span>
+            <h2>Questions? We're right here.</h2>
+            <p>Real support, every step of the way — reach out any time and we'll point you in the right direction.</p>
+          </div>
+          <div className="contact-grid">
+            <div className="contact-card">
+              <h3>Email our team</h3>
+              <p>Send us a note and we'll typically get back to you within one business day.</p>
+              <a className="btn btn-gold" href={`mailto:${CONTACT.email}`}>Email us</a>
+            </div>
+            <div className="contact-card">
+              <h3>Need a quick answer now?</h3>
+              <p>Ask our AI Entity Advisor about LLCs, structures, EINs, and business credit — instant answers, any time.</p>
+              <a className="btn btn-gold" onClick={() => scrollToId("advisor")}>Ask the advisor</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER — matches Your Credit Advocate */}
+      <footer className="footer">
+        <div className="disc-band" id="disclaimer">
+          <div className="wrap">
+            <div className="disc-card">
+              <h4 className="disc-title"><Warn /> Important Disclaimer</h4>
+              <p>This platform provides business education and AI-generated guidance on entity formation, business structure, and funding readiness. This is NOT legal, tax, or financial advice. No specific results, approvals, or funding amounts are guaranteed. Always review any information with a qualified attorney, CPA, or financial professional before acting on it. Some links on this page are partner or affiliate links, and we may earn a commission at no extra cost to you.</p>
+            </div>
+          </div>
+        </div>
+        <div className="wrap">
+          <div className="foot-main">
+            <div>
+              <div className="foot-name">{BRAND_NAME}</div>
+              <div className="foot-contact">{CONTACT.email} · {CONTACT.location}</div>
+            </div>
+            <nav className="foot-links">
+              <a onClick={() => setModal("privacy")}>Privacy Policy</a>
+              <a onClick={() => setModal("terms")}>Terms of Service</a>
+              <a onClick={() => setModal("disclaimer")}>Disclaimer</a>
+              <a onClick={() => scrollToId("contact")}>Contact Us</a>
+            </nav>
+          </div>
+          <div className="foot-bottom">
+            <span>© 2024 {BRAND_NAME}. All rights reserved.</span>
+            <span>Educational platform · Not legal advice · No guarantees</span>
+          </div>
+        </div>
+      </footer>
+
+      <Modal data={modal ? LEGAL[modal] : null} onClose={() => setModal(null)} />
+    </div>
+  );
+}
+
+
+const __root = ReactDOM.createRoot(document.getElementById("root"));
+__root.render(<BusinessFundingPortal />);
+
+  </script>
+</body>
+</html>
