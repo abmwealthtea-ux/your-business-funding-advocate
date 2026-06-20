@@ -53,14 +53,13 @@ const LINKS = {
 };
 
 // 5) ---- AI connection ----
-// PREVIEW MODE (true): the bot talks to Claude directly so you can test it here.
-// LIVE MODE (false):   on your live site, switch to false and put your Supabase
-//                      function web address in productionEndpoint.
+// LIVE MODE (useDirectPreview: false) talks to your secure messenger at /api/chat.
+// Your secret AI key lives in Vercel (ANTHROPIC_API_KEY), never in this file.
 const AI_CONFIG = {
-  // LIVE SITE: stays false. Your secret key must live in a Supabase function, never here.
+  // Stays false on the live site. The key is held safely by your Vercel messenger.
   useDirectPreview: false,
-  // When your Supabase function is ready, paste its web address here (replace this whole line).
-  productionEndpoint: "https://YOUR-PROJECT.functions.supabase.co/entity-advisor",
+  // Your secure messenger on Vercel (same site, so a simple "/api/chat" path).
+  productionEndpoint: "/api/chat",
   // Friendly message shown until the secure AI backend is connected.
   offlineMessage:
     "Thanks so much for your question! Our AI advisor is being connected right now and will be ready very soon. In the meantime, the fastest way to get answers tailored to you is the free business assessment at the top of this page \u2014 it maps out your entity setup and your path to funding, and includes a complimentary consultation. Just tap one of the two path cards up top to begin. \ud83d\udc9b",
