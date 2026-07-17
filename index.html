@@ -371,6 +371,17 @@ const STYLES = `
 .send:hover{ background:rgba(230,185,71,0.12); box-shadow:0 0 22px rgba(230,185,71,0.6); }
 .send:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
 
+/* FAMILY PROMISE BAND */
+.promise-band{ background:#000000; border-top:1px solid var(--gold-line); border-bottom:1px solid var(--gold-line);
+  padding:38px 24px; text-align:center; }
+.promise-quote{ font-family:'Playfair Display',Georgia,serif; font-style:italic; font-weight:600;
+  font-size:clamp(18px,3vw,24px); line-height:1.4; color:var(--white); max-width:760px; margin:0 auto; }
+.promise-sig{ font-size:11px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold);
+  margin:10px 0 14px; }
+.promise-link{ display:inline-block; font-size:13px; font-weight:600; color:#6FB7E6; border-bottom:1px solid #4B9CD3;
+  padding-bottom:2px; letter-spacing:0.04em; text-shadow:0 0 12px rgba(75,156,211,0.45); }
+.promise-link:hover{ color:#fff; text-shadow:0 0 18px rgba(75,156,211,0.85); }
+
 /* FOOTER (matches Your Credit Advocate) */
 .footer{ background:#070709; }
 .disc-band{ background:#070709; padding:42px 0 34px; }
@@ -865,6 +876,12 @@ function BusinessFundingPortal() {
           </div>
         </div>
       </section>
+
+      <div className="promise-band">
+        <div className="promise-quote">"Helping families keep more, build more, and protect more."</div>
+        <div className="promise-sig">— Coach Toni</div>
+        <a className="promise-link" href="https://discounts-are-us.com" target="_blank" rel="noopener">Start with everyday savings → Discounts-Are-Us.com</a>
+      </div>
 
       {/* FOOTER — matches Your Credit Advocate */}
       <footer className="footer">
