@@ -33,8 +33,11 @@ const { useState, useRef, useEffect } = React;
    1. BRAND_NAME .......... the name shown top-left + footer
    2. CONTACT ............. footer email + location
    3. LINKS ............... your four affiliate / portal links
+   3b. CREDIT_LINKS ....... your affiliate links for the "Build Business
+                            Credit" steps (paste them in, buttons appear)
    4. SYSTEM_PROMPT ....... the AI advisor's personality + rules
    5. AI_CONFIG ........... how the AI bot connects (preview vs. live)
+   6. AI_LIMITS ........... how many questions each visitor may type per day
    ============================================================= */
 
 // 1) ---- Brand name ----
@@ -50,7 +53,171 @@ const LINKS = {
   fundingRoadmap: "https://blueprint.lendavo.com/?afmc=mm",
   personalCredit: "https://www.your-credit-advocate.com/",
   smartCredit: "https://www.smartcredit.com/?PID=51110",
+  // The Come As You Are main site. PASTE ITS WEB ADDRESS between the quotes.
+  // While this is empty, the "Go to Come As You Are" buttons stay hidden.
+  comeAsYouAre: "",
 };
+
+// ---- The Come As You Are path (shown in the strip under the top bar) ----
+const TEAM_NAME = "\u201cCome As You Are Success Team\u201d";
+const PATHWAY = [
+  { n: 1, title: "Fix your credit", sub: "Your Credit Advocate", href: LINKS.personalCredit },
+  { n: 2, title: "Start your LLC", sub: "You are here", here: true, scroll: "start" },
+  { n: 3, title: "Get funding", sub: "You are here", here: true, scroll: "start" },
+  { n: 4, title: "Get the property", sub: "Come As You Are", scroll: "ready", blue: true },  // jumps to the "When you are ready" box
+];
+
+
+// 3b) ---- Business credit partner links  (PASTE YOUR AFFILIATE LINKS HERE) ----
+// HOW IT WORKS: paste your link between the quotes after  url:
+// If you leave it as ""  the button stays hidden, so the page is safe to
+// publish before every link is filled in. You can also change the button
+// words after  label:  (example: "Open a net-30 account with ABC Supply").
+const CREDIT_LINKS = {
+  bankAccount:   { label: "Open a business bank account", url: "" },   // shows in Step 2
+  businessPhone: { label: "Get a business phone number",  url: "" },   // shows in Step 3
+  vendor1:       { label: "Open a net-30 account",        url: "" },   // shows in Step 5
+  vendor2:       { label: "Open a net-30 account",        url: "" },   // shows in Step 5
+  vendor3:       { label: "Open a net-30 account",        url: "" },   // shows in Step 5
+  monitoring:    { label: "Check my business credit",     url: "" },   // shows in Step 7
+  businessCard:  { label: "See business credit cards",    url: "" },   // shows in Step 8
+};
+
+// ---- Official (non-affiliate) links used in the steps ----
+const OFFICIAL = {
+  ein: "https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number",
+  duns: "https://www.dnb.com/duns-number/get-a-duns.html",
+};
+
+// ---- The "Build Business Credit" baby steps (plain words you can edit) ----
+// partner: true  = an affiliate link, so the commission notice shows under it.
+const BUILD_STEPS = [
+  {
+    id: "ein",
+    title: "Get your EIN",
+    tag: "Free · takes minutes online",
+    why: [
+      "An EIN (Employer Identification Number) is a 9-digit number the IRS gives your business. Think of it as a Social Security number for your company. You will use it to open your bank account and to apply for credit in the business name.",
+    ],
+    todo: [
+      "Form your LLC with your state first. The IRS says applying before that can delay your EIN.",
+      "Apply online at IRS.gov. It is free, and you get your number in minutes.",
+      "Save the confirmation letter. Banks and vendors will ask for it.",
+    ],
+    watch: "The IRS never charges for an EIN. If a website asks you to pay, you are paying someone to fill out the free form for you.",
+    links: [{ label: "Apply at IRS.gov (free)", url: OFFICIAL.ein }],
+  },
+  {
+    id: "bank",
+    title: "Open a business bank account",
+    tag: "In your LLC's name",
+    why: [
+      "Open a checking account in your LLC's name, using your EIN. This keeps business money and personal money apart. Lenders and vendors also use the account as a bank reference, which is proof that your business is real and handles money.",
+    ],
+    todo: [
+      "Bring your LLC formation papers, your EIN letter, and your photo ID. Call ahead, because each bank has its own list.",
+      "Run all business income and business bills through this account only.",
+      "Keep money in it. Lenders may look at this account when you ask for funding later.",
+    ],
+    links: [{ ...CREDIT_LINKS.bankAccount, partner: true }],
+  },
+  {
+    id: "identity",
+    title: "Use one name, one address, one phone",
+    tag: "Free · look the same everywhere",
+    why: [
+      "Each credit bureau collects information about your business from many places. Writing your business name, address, and phone number the same way every time helps your payments get matched to your company.",
+    ],
+    todo: [
+      "Write your legal business name exactly as it appears on your LLC papers, every time.",
+      "Pick one business address and one business phone number, and use them on every application.",
+      "Set up a business email so applications do not go to a personal inbox.",
+    ],
+    links: [{ ...CREDIT_LINKS.businessPhone, partner: true }],
+  },
+  {
+    id: "duns",
+    title: "Get your free D-U-N-S Number",
+    tag: "Free · can take up to 30 business days",
+    why: [
+      "A D-U-N-S Number is a 9-digit number from Dun & Bradstreet (D&B), one of the three main business credit bureaus. It is tied to your company's credit file there.",
+    ],
+    todo: [
+      "Request it on the D&B website. Have your legal business name, address, phone, owner name, type of business, and the year it started.",
+      "Choose the free option. D&B says normal processing can take up to 30 business days.",
+      "Keep going with the next steps while you wait.",
+    ],
+    watch: "D&B also sells paid products and a faster paid option. You do not have to buy anything to get your number.",
+    links: [{ label: "Request my D-U-N-S Number (free)", url: OFFICIAL.duns }],
+  },
+  {
+    id: "vendors",
+    title: "Open starter vendor accounts that report",
+    tag: "Called “net-30” accounts",
+    why: [
+      "A net-30 account lets your business buy supplies now and pay the bill within 30 days. When the vendor reports your payments to the business credit bureaus, the account becomes a tradeline, which is one line of payment history on your business credit report. Tradelines are what create a score.",
+    ],
+    todo: [
+      "Ask before you open anything: “Do you report payments to the business credit bureaus, and which ones?” Most vendors do not report.",
+      "Also ask: “Will you check my personal credit or ask me to personally guarantee the account?”",
+      "Start with a few vendors that sell things your business really uses.",
+      "Apply in the business name with your EIN, using the same name, address, and phone from Step 3.",
+    ],
+    links: [
+      { ...CREDIT_LINKS.vendor1, partner: true },
+      { ...CREDIT_LINKS.vendor2, partner: true },
+      { ...CREDIT_LINKS.vendor3, partner: true },
+    ],
+  },
+  {
+    id: "pay",
+    title: "Pay early, every time",
+    tag: "The habit that builds the score",
+    why: [
+      "Payment history is the heart of business credit. D&B's PAYDEX score runs from 1 to 100, and D&B treats 80 and above as low risk. Paying on time gets you there. Paying before the due date can push it higher.",
+    ],
+    todo: [
+      "Buy only what you need and can pay for right away.",
+      "Pay each invoice as soon as it arrives. Do not wait for day 30.",
+      "Give it time. Vendors report on their own schedule, so a new account can take weeks or months to show up.",
+    ],
+    links: [],
+  },
+  {
+    id: "monitor",
+    title: "Check your business credit reports",
+    tag: "Three bureaus, three files",
+    why: [
+      "The three main business credit bureaus are Dun & Bradstreet, Experian, and Equifax. Each one collects its own information, so your file can look different at each one.",
+    ],
+    todo: [
+      "Look up your business at each bureau once your first accounts start reporting.",
+      "Check that your business name, address, and accounts are correct.",
+      "If something is wrong or out of date, contact that bureau and ask for a correction.",
+    ],
+    watch: "Business credit reports are usually not free the way personal reports are. Only pay for monitoring if it fits your budget.",
+    links: [{ ...CREDIT_LINKS.monitoring, partner: true }],
+  },
+  {
+    id: "stepup",
+    title: "Step up to bigger credit",
+    tag: "When your file is ready",
+    why: [
+      "Once several accounts are reporting on-time payments, you can apply for bigger credit in the business name: store cards, fuel cards, business credit cards, and lines of credit.",
+    ],
+    todo: [
+      "Add one new account at a time, and keep paying early.",
+      "Read every application for the words “personal guarantee.” That is a promise that you will pay personally if the business cannot.",
+      "Keep working on your personal credit at the same time.",
+    ],
+    watch: "Many business credit cards ask for a personal guarantee, especially for new businesses. That is why your personal credit still matters.",
+    links: [
+      { label: "Work on my personal credit", url: LINKS.personalCredit },
+      { label: "Start my free funding assessment", url: LINKS.fundingRoadmap, partner: true },
+      { ...CREDIT_LINKS.businessCard, partner: true },
+    ],
+  },
+];
 
 // 5) ---- AI connection ----
 // LIVE MODE (useDirectPreview: false) talks to your secure messenger at /api/chat.
@@ -65,6 +232,24 @@ const AI_CONFIG = {
     "Thanks so much for your question! Our AI advisor is being connected right now and will be ready very soon. In the meantime, the fastest way to get answers tailored to you is the free business assessment at the top of this page \u2014 it maps out your entity setup and your path to funding, and includes a complimentary consultation. Just tap one of the two path cards up top to begin. \ud83d\udc9b",
 };
 
+// 6) ---- AI cost controls ----
+// questionsPerDay: how many questions each visitor may TYPE per day (on their device).
+// The four starter buttons below are answered with ready-made answers, so they
+// never use the AI and never cost anything. Only typed questions reach the AI.
+const AI_LIMITS = { questionsPerDay: 5, maxLetters: 300 };
+
+// Ready-made answers for the starter buttons (free: no AI call). Edit the words any time.
+const STARTER_ANSWERS = {
+  "LLC vs. S-Corp \u2014 what's the difference?":
+    "An LLC is a type of company you form with your state. It builds the legal wall between you and your business.\n\nAn S-Corp is not a separate company. It is a tax choice you can make with the IRS, and an LLC can make it. It only changes how profits are taxed.\n\nAsk a CPA whether the S-Corp choice makes sense for your income.",
+  "Do I really need an EIN?":
+    "If you want business credit, yes. An EIN is your business's tax ID number from the IRS. Banks ask for it to open a business account, and vendors and lenders use it when you apply in the business name.\n\nIt is free at IRS.gov. It is Step 1 of the business credit steps on this page.",
+  "How does the two-layer LLC structure work?":
+    "You form one LLC in a privacy-friendly state such as Wyoming or New Mexico. That LLC owns a second LLC in your home state, which runs the business or holds the property. In many states, the public record for the local LLC can then show the holding company instead of your name.\n\nRules differ by state, so confirm the setup with an attorney before you file.",
+  "First steps to build business credit?":
+    "Follow the 8 steps on this page, in order. Start with your free EIN, open a business bank account, use one name, address, and phone everywhere, and get your free D-U-N-S Number. Then open vendor accounts that report your payments, and pay early.\n\nTap \"Build business credit\" at the top of the page to begin.",
+};
+
 // 4) ---- The AI advisor's personality + guardrails ----
 const SYSTEM_PROMPT = `You are the Business Entity Advisor for an online business-building portal — a seasoned, calm, confident guide with years of experience helping entrepreneurs set up and structure their businesses. You sound like a supportive coach: warm, clear, and professional. Never stiff, never salesy.
 
@@ -77,22 +262,26 @@ WHAT YOU HELP WITH (your only topics):
 - What business credit is and why it matters, at a high level only.
 
 HOW YOU ANSWER:
-- Lead with the answer. Keep it to 2-5 short sentences, or 3-5 quick points for a list. No filler, no rambling, no long preamble.
+- Lead with the answer. Keep it to 2-4 short sentences, or at most 4 quick points for a list. No filler, no rambling, no long preamble.
 - Plain English. Define any term the moment you use it.
 - Be confident and encouraging — give a clear recommendation or next step when asked, framed as general education.
 - Use simple dashes for short lists. Never use markdown symbols like **, ##, or backticks.
 
 STAY IN YOUR LANE (redirect, don't drift):
-- Personal credit repair → point them to the sister company, Your Credit Advocate, linked on this page.
-- How to BUILD business credit (the steps, a plan, a roadmap) → do NOT give a do-it-yourself walkthrough. Point them to the free business assessment at the top of the page (Path 2), which maps it out for them.
-- Funding, loan amounts, or what they qualify for → point them to the free assessment at the top of the page.
+- Personal credit repair → point them to the sister site, Your Credit Advocate, linked on this page. It is free and do-it-yourself.
+- Real estate: buying property, tax liens, tax deeds, finding deals, or what comes after the LLC and funding → point them to Come As You Are, the main site of this path, in the "When you are ready" section of this page. Do not teach real estate here.
+- How to BUILD business credit (the steps, a plan, a roadmap) → do NOT repeat the whole process. Point them to the 8 free steps in the "Build your business credit" section on this page, and answer only the specific question in a sentence or two.
+- Funding, loan amounts, or what they qualify for → point them to the free funding assessment at the top of the page (Path 3).
 - Anything outside business entities, structures, formation, or foundational business credit → briefly say it's outside what you cover, and steer back.
 
 HARD RULES:
 - Educational information only. You are NOT a lawyer, CPA, or financial advisor, and you do NOT give legal, tax, or financial advice.
 - Never promise or guarantee any result, approval, funding amount, or timeline.
 - For anything specific to their situation, tell them to confirm with a licensed attorney or CPA.
-- Never name or claim affiliation with any outside company or brand. You are simply this portal's advisor.`;
+- Never name or claim affiliation with any outside company or brand, other than the two sites in this path: Your Credit Advocate and Come As You Are. You are simply this portal's advisor.
+
+THE PATH THIS PORTAL BELONGS TO (mention only when it helps):
+- Come as you are. Leave as an owner. Step 1 fix your credit (Your Credit Advocate). Step 2 start your LLC and step 3 get funding (this portal). Step 4 get the property (Come As You Are).`;
 
 const STARTERS = [
   "LLC vs. S-Corp — what's the difference?",
@@ -176,6 +365,7 @@ const STYLES = `
   --navy:#0A1B3D; --navy-2:#0C2149; --surface:#102A57; --surface-2:#16356B;
   --gold:#E6B947; --gold-soft:#F2CF6E; --red:#E0485A; --red-deep:#C8102E;
   --white:#ECF2FC; --muted:#9DB2D6; --green:#2DD46A; --green-soft:#5CE894;
+  --blue:#4B9CD3; --blue-soft:#8CC4EA;
   --line:rgba(157,178,214,0.16); --gold-line:rgba(230,185,71,0.22);
 }
 *{box-sizing:border-box;}
@@ -371,13 +561,59 @@ const STYLES = `
 .send:hover{ background:rgba(230,185,71,0.12); box-shadow:0 0 22px rgba(230,185,71,0.6); }
 .send:disabled{ opacity:.4; cursor:not-allowed; box-shadow:none; }
 
+/* COME AS YOU ARE — path strip under the top bar */
+.cayu-strip{ background:#000; border-bottom:1px solid rgba(75,156,211,0.35); padding:16px 0 18px; text-align:center; }
+.cayu-motto{ font-family:'Inter',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.14em;
+  color:var(--blue); font-size:clamp(11px,2.9vw,17px); white-space:nowrap; margin:0 0 13px; text-shadow:0 0 14px rgba(75,156,211,0.5); }
+.cayu-steps{ display:flex; justify-content:center; align-items:stretch; gap:10px; flex-wrap:wrap; list-style:none; margin:0; padding:0; }
+.cayu-step{ display:flex; align-items:center; gap:10px; text-align:left; padding:8px 14px; border-radius:10px; cursor:pointer;
+  border:1px solid var(--line); background:rgba(255,255,255,0.03); color:var(--white); font-family:'Inter',sans-serif; transition:.18s; }
+.cayu-step:hover{ border-color:var(--gold); }
+.cayu-step .n{ flex:0 0 auto; width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:800;
+  border:1.5px solid var(--muted); color:var(--muted); }
+.cayu-step .t{ display:block; font-size:13.5px; font-weight:700; line-height:1.25; }
+.cayu-step .s{ display:block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); line-height:1.3; }
+.cayu-step.here{ border-color:var(--gold); background:rgba(230,185,71,0.08); box-shadow:0 0 14px rgba(230,185,71,0.28); }
+.cayu-step.here .n{ border-color:var(--gold); background:var(--gold); color:#0A1B3D; }
+.cayu-step.here .s{ color:var(--gold); }
+.cayu-step.blue .n{ border-color:var(--blue); color:var(--blue-soft); }
+.cayu-step.blue .s{ color:var(--blue-soft); }
+.cayu-step.blue:hover{ border-color:var(--blue); box-shadow:0 0 16px rgba(75,156,211,0.45); }
+@media(max-width:700px){
+  .cayu-steps{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .cayu-step{ padding:8px 10px; gap:8px; }
+  .cayu-step .t{ font-size:12.5px; }
+  .cayu-step .s{ font-size:10px; }
+}
+
+/* WHEN YOU ARE READY — the referral to Come As You Are (Carolina blue, lights up when touched) */
+.ready-card{ max-width:860px; margin:0 auto; background:#000; border:1.5px solid rgba(75,156,211,0.55); border-radius:18px;
+  padding:36px 34px; text-align:center; transition:.25s; box-shadow:0 0 18px rgba(75,156,211,0.18); }
+.ready-card:hover{ border-color:var(--blue); box-shadow:0 0 0 1px rgba(75,156,211,0.4), 0 0 44px rgba(75,156,211,0.55), inset 0 0 24px rgba(75,156,211,0.08); }
+.ready-motto{ font-family:'Inter',sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.12em; color:var(--blue);
+  font-size:clamp(11px,2.7vw,16px); white-space:nowrap; margin:0 0 14px; }
+.ready-card h3{ font-size:clamp(24px,3.6vw,32px); font-weight:700; color:#fff; margin:0 0 12px; }
+.ready-card h3 em{ color:var(--gold); font-style:italic; }
+.ready-card .lead{ color:#E2E8F3; font-size:15.5px; max-width:60ch; margin:0 auto 22px; }
+.ready-ways{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:0 0 26px; text-align:left; }
+@media(max-width:700px){ .ready-ways{ grid-template-columns:1fr; } .ready-card{ padding:28px 20px; } }
+.ready-way{ border:1px solid var(--line); border-radius:12px; padding:16px 16px; }
+.ready-way .k{ font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--blue-soft); margin-bottom:5px; }
+.ready-way .v{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:18px; color:var(--gold); margin-bottom:5px; }
+.ready-way p{ margin:0; font-size:13.5px; color:#C9D6EC; line-height:1.55; }
+.btn-blue{ color:var(--blue-soft); border-color:var(--blue);
+  box-shadow:0 0 14px rgba(75,156,211,0.5), inset 0 0 10px rgba(75,156,211,0.08); }
+.btn-blue:hover{ transform:translateY(-2px); background:rgba(75,156,211,0.14);
+  box-shadow:0 0 26px rgba(75,156,211,0.75), inset 0 0 14px rgba(75,156,211,0.14); }
+.ready-fine{ font-size:12.5px; color:var(--muted); margin:18px auto 0; max-width:60ch; }
+.team{ font-style:italic; font-weight:700; color:var(--gold); }
+
 /* FAMILY PROMISE BAND */
 .promise-band{ background:#000000; border-top:1px solid var(--gold-line); border-bottom:1px solid var(--gold-line);
   padding:38px 24px; text-align:center; }
 .promise-quote{ font-family:'Playfair Display',Georgia,serif; font-style:italic; font-weight:600;
   font-size:clamp(18px,3vw,24px); line-height:1.4; color:var(--white); max-width:760px; margin:0 auto; }
-.promise-sig{ font-size:11px; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold);
-  margin:10px 0 14px; }
+.promise-sig{ font-size:14px; margin:10px 0 14px; }
 .promise-band a.promise-link{ display:inline-block; font-size:13px; font-weight:600; color:#6FB7E6; border-bottom:1px solid #4B9CD3;
   padding-bottom:2px; letter-spacing:0.04em; text-shadow:0 0 12px rgba(75,156,211,0.45); }
 .promise-band a.promise-link:hover{ color:#fff; text-shadow:0 0 18px rgba(75,156,211,0.85); }
@@ -440,7 +676,67 @@ const STYLES = `
   .disc-card{ padding:20px 20px; }
   .foot-main{ gap:18px; }
 }
+
+/* BUILD BUSINESS CREDIT — baby steps */
+.build-first{ max-width:820px; margin:0 auto 22px; display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+  background:#070709; border:1px solid var(--gold-line); border-radius:16px; padding:20px 24px; }
+.build-first p{ margin:0; font-size:14.5px; color:#D7DEEC; flex:1 1 320px; }
+.build-first b{ color:var(--gold-soft); }
+.build-prog{ max-width:820px; margin:0 auto 18px; }
+.build-prog-row{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:13px; color:var(--muted); margin-bottom:8px; }
+.build-prog-row b{ color:var(--white); font-weight:700; }
+.build-track{ height:6px; background:rgba(157,178,214,0.18); border-radius:99px; overflow:hidden; }
+.build-fill{ height:100%; background:linear-gradient(90deg, var(--green), var(--green-soft)); border-radius:99px; transition:width .3s ease; }
+.steps{ max-width:820px; margin:0 auto; display:flex; flex-direction:column; gap:14px; list-style:none; padding:0; }
+.step{ background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden; transition:border-color .2s ease, box-shadow .2s ease; }
+.step:hover{ border-color:var(--gold); box-shadow:0 0 22px rgba(230,185,71,0.26); }
+.step.open{ border-color:var(--gold); box-shadow:0 0 0 1px rgba(230,185,71,0.20), 0 0 28px rgba(230,185,71,0.30); }
+.step-head{ width:100%; display:flex; align-items:center; gap:16px; padding:18px 22px; background:transparent; border:none;
+  color:inherit; cursor:pointer; text-align:left; font-family:'Inter',system-ui,sans-serif; }
+.step-num{ flex:0 0 auto; width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
+  border:2px solid var(--gold); color:var(--gold); font-weight:800; font-size:16px; }
+.step.done .step-num{ background:rgba(45,212,106,0.16); border-color:var(--green); color:var(--green-soft); }
+.step-title{ flex:1 1 auto; min-width:0; }
+.step-title .t{ display:block; font-family:'Playfair Display',Georgia,serif; font-size:19px; font-weight:700; line-height:1.25; color:var(--white); }
+.step-title .s{ display:block; font-size:12.5px; color:var(--muted); margin-top:3px; letter-spacing:.02em; }
+.step-chev{ flex:0 0 auto; width:20px; height:20px; color:var(--gold); transition:transform .2s ease; }
+.step.open .step-chev{ transform:rotate(180deg); }
+.step-body{ padding:2px 22px 24px 78px; }
+.step-body p{ color:#D7DEEC; font-size:15px; margin:0 0 14px; }
+.step-body .do{ font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--gold); font-weight:700; margin:0 0 10px; }
+.step-body .checks{ margin:0 0 16px; }
+.step-watch{ display:flex; gap:10px; align-items:flex-start; background:rgba(224,72,90,0.10); border:1px solid rgba(224,72,90,0.35);
+  border-radius:12px; padding:12px 14px; font-size:14px; color:#F1D9DD; margin:0 0 16px; }
+.step-watch svg{ flex:0 0 auto; color:var(--red); margin-top:3px; }
+.step-actions{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.btn-sm{ padding:10px 18px; font-size:14px; }
+.step-body .partner-note{ font-size:12.5px; line-height:1.5; color:var(--muted); margin:16px 0 0; }
+.done-btn{ display:inline-flex; align-items:center; gap:8px; margin-top:18px; background:transparent; border:1px solid rgba(45,212,106,0.5);
+  color:var(--green-soft); font-family:'Inter',system-ui,sans-serif; font-size:13.5px; font-weight:700; padding:9px 16px; border-radius:10px; cursor:pointer; transition:.16s; }
+.done-btn:hover{ background:rgba(45,212,106,0.12); border-color:var(--green); }
+.build-real{ max-width:820px; margin:24px auto 0; font-size:14px; color:var(--muted); text-align:center; }
+.build-real b{ color:var(--white); }
+.build-src{ max-width:820px; margin:10px auto 0; font-size:12px; color:#7E92B6; text-align:center; }
+@media(max-width:560px){
+  .step-head{ padding:16px 16px; gap:13px; }
+  .step-num{ width:36px; height:36px; font-size:15px; }
+  .step-title .t{ font-size:17.5px; }
+  .step-body{ padding:2px 16px 20px; }
+  .step-actions .btn{ width:100%; }
+  .build-first{ padding:18px 18px; }
+  .build-first .btn{ width:100%; }
+}
+
+/* THREE PATHS */
+@media(min-width:981px){ .paths.three{ grid-template-columns:repeat(3,1fr); gap:20px; } .paths.three .path{ padding:34px 26px; } .paths.three .path h2{ font-size:24px; } }
+@media(max-width:980px){ .paths.three{ grid-template-columns:1fr; } }
+
+.chat-limit{ font-size:12px; color:var(--muted); padding:0 24px 12px; }
+@media(max-width:560px){
+  .chat-limit{ padding:0 16px 12px; }
+}
 .hero,.section{ scroll-margin-top:84px; }
+.nav-links a.nav-cayu{ color:var(--blue-soft); font-weight:700; }
 `;
 
 function scrollToId(id) {
@@ -521,6 +817,19 @@ function BuildingsMotif() {
   );
 }
 
+function CoinsMotif() {
+  return (
+    <svg className="path-motif" viewBox="0 0 64 64" aria-hidden="true">
+      <g fill="none" stroke="#E6B947" strokeWidth="3">
+        <ellipse cx="24" cy="46" rx="14" ry="5" /><path d="M10 46 v6 c0 2.8 6.3 5 14 5 s14 -2.2 14 -5 v-6" />
+        <ellipse cx="24" cy="36" rx="14" ry="5" /><path d="M10 36 v6" /><path d="M38 36 v6" />
+        <ellipse cx="42" cy="22" rx="12" ry="12" />
+      </g>
+      <path d="M42 15 v14 M46 17.5 c-1 -1.5 -6.5 -2 -7.5 0.5 c-1 3 8 2.5 7.5 6 c-0.5 2.7 -6.5 2.6 -8 0.5" fill="none" stroke="#E0485A" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function BizCelebrateRemoved() { return null; }
 function Warn() {
   return (
@@ -583,12 +892,41 @@ function ConsultantChat() {
     setInput("");
   }
 
+  // How many questions this visitor has typed today (kept on their device).
+  const LIMIT_KEY = "yba_ai_questions";
+  function usedToday() {
+    try {
+      const d = JSON.parse(window.localStorage.getItem(LIMIT_KEY) || "{}");
+      return d.day === new Date().toDateString() ? (d.n || 0) : 0;
+    } catch (e) { return 0; }
+  }
+  function countOne() {
+    try { window.localStorage.setItem(LIMIT_KEY, JSON.stringify({ day: new Date().toDateString(), n: usedToday() + 1 })); } catch (e) { /* ignore */ }
+  }
+  const [left, setLeft] = useState(AI_LIMITS.questionsPerDay);
+  useEffect(() => { setLeft(Math.max(0, AI_LIMITS.questionsPerDay - usedToday())); }, []);
+
   async function send(text) {
-    const content = (text ?? input).trim();
+    const content = (text ?? input).trim().slice(0, AI_LIMITS.maxLetters);
     if (!content || loading) return;
     const next = [...messages, { role: "user", content }];
     setMessages(next);
     setInput("");
+
+    // Starter buttons: ready-made answer, no AI, no cost.
+    if (STARTER_ANSWERS[content]) {
+      setMessages([...next, { role: "assistant", content: STARTER_ANSWERS[content] }]);
+      return;
+    }
+
+    // Daily limit reached: friendly note, no AI, no cost.
+    if (usedToday() >= AI_LIMITS.questionsPerDay) {
+      setMessages([...next, { role: "assistant", content: `You have used today's ${AI_LIMITS.questionsPerDay} free questions. The 8 business credit steps on this page answer most questions, or email us at ${CONTACT.email}. You can ask more tomorrow.` }]);
+      setLeft(0);
+      return;
+    }
+    countOne();
+    setLeft(Math.max(0, AI_LIMITS.questionsPerDay - usedToday()));
     setLoading(true);
 
     // Not connected to a secure backend yet -> warm fallback, no error.
@@ -619,7 +957,7 @@ function ConsultantChat() {
         const res = await fetch(AI_CONFIG.productionEndpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: next }),
+          body: JSON.stringify({ messages: next.slice(-6) }),
         });
         const data = await res.json();
         reply = data.reply || data.content || "";
@@ -657,15 +995,17 @@ function ConsultantChat() {
           <div className="msg bot"><span className="typing-dots"><i /><i /><i /></span></div>
         )}
       </div>
-      {messages.length <= 1 && (
+      {(
         <div className="chips">
           {STARTERS.map((q) => (
             <button key={q} className="chip" onClick={() => send(q)}>{q}</button>
           ))}
         </div>
       )}
+      <div className="chat-limit">{left} of {AI_LIMITS.questionsPerDay} typed questions left today. The suggested questions above are always free.</div>
       <div className="chat-input">
         <input
+          maxLength={AI_LIMITS.maxLetters}
           value={input}
           placeholder="Ask about entities, structures, or business credit…"
           onChange={(e) => setInput(e.target.value)}
@@ -675,6 +1015,108 @@ function ConsultantChat() {
         <button className="send" onClick={() => send()} disabled={loading || !input.trim()}>Send</button>
       </div>
     </div>
+  );
+}
+
+function BuildCredit() {
+  const [open, setOpen] = useState(0);
+  const [done, setDone] = useState([]);
+  const KEY = "yba_build_steps_done";
+
+  // Remember which steps a visitor has finished (on their own device only).
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(KEY) || "[]");
+      if (Array.isArray(saved)) setDone(saved.filter((x) => typeof x === "string"));
+    } catch (e) { /* storage unavailable: the checklist still works for this visit */ }
+  }, []);
+
+  function toggleDone(id, index) {
+    const wasDone = done.includes(id);
+    const next = wasDone ? done.filter((x) => x !== id) : [...done, id];
+    setDone(next);
+    try { window.localStorage.setItem(KEY, JSON.stringify(next)); } catch (e) { /* ignore */ }
+    if (!wasDone) setOpen(index < BUILD_STEPS.length - 1 ? index + 1 : -1);
+  }
+
+  const total = BUILD_STEPS.length;
+  const count = BUILD_STEPS.filter((s) => done.includes(s.id)).length;
+
+  return (
+    <section className="section" id="build">
+      <div className="wrap">
+        <div className="section-head">
+          <span className="eyebrow">Path 2 &middot; Do it yourself &middot; baby steps</span>
+          <h2>Build your business credit.</h2>
+          <p>Business credit is a credit file in your company's name, separate from your personal credit. Here are the steps, in order. Take one at a time.</p>
+        </div>
+
+        <div className="build-first">
+          <p><b>Before Step 1:</b> you need an LLC or corporation. A sole proprietorship (a business run in your own name, with no company formed) cannot build credit that is separate from you.</p>
+          <a className="btn btn-sm" onClick={() => scrollToId("start")}>Form my business first</a>
+        </div>
+
+        <div className="build-prog" aria-live="polite">
+          <div className="build-prog-row">
+            <span><b>{count} of {total}</b> steps done</span>
+            <span>Your checkmarks are saved on this device.</span>
+          </div>
+          <div className="build-track"><div className="build-fill" style={{ width: `${Math.round((count / total) * 100)}%` }} /></div>
+        </div>
+
+        <ol className="steps">
+          {BUILD_STEPS.map((s, i) => {
+            const isOpen = open === i;
+            const isDone = done.includes(s.id);
+            const links = (s.links || []).filter((l) => l && l.url);
+            const hasPartner = links.some((l) => l.partner);
+            return (
+              <li key={s.id} className={`step${isOpen ? " open" : ""}${isDone ? " done" : ""}`}>
+                <button
+                  className="step-head"
+                  onClick={() => setOpen(isOpen ? -1 : i)}
+                  aria-expanded={isOpen}
+                  aria-controls={`step-body-${s.id}`}
+                >
+                  <span className="step-num" aria-hidden="true">{isDone ? <Check /> : i + 1}</span>
+                  <span className="step-title">
+                    <span className="t">Step {i + 1}: {s.title}</span>
+                    <span className="s">{isDone ? "Done" : s.tag}</span>
+                  </span>
+                  <svg className="step-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9" /></svg>
+                </button>
+                {isOpen && (
+                  <div className="step-body" id={`step-body-${s.id}`}>
+                    {s.why.map((para, j) => <p key={j}>{para}</p>)}
+                    <div className="do">Do this</div>
+                    <ul className="checks">
+                      {s.todo.map((t, j) => (
+                        <li key={j}><span className="check"><Check /></span><span>{t}</span></li>
+                      ))}
+                    </ul>
+                    {s.watch ? <div className="step-watch"><Warn /><span>{s.watch}</span></div> : null}
+                    {links.length > 0 && (
+                      <div className="step-actions">
+                        {links.map((l, j) => (
+                          <a key={j} className="btn btn-sm" href={l.url} target="_blank" rel="noopener noreferrer">{l.label} <Arrow /></a>
+                        ))}
+                      </div>
+                    )}
+                    {hasPartner ? <p className="partner-note">Partner link: we may earn a commission if you sign up, at no extra cost to you.</p> : null}
+                    <button className="done-btn" onClick={() => toggleDone(s.id, i)}>
+                      {isDone ? "Undo: mark as not done" : <><Check /> I finished this step</>}
+                    </button>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        <p className="build-real"><b>Real talk:</b> business credit takes months to build, not days. Nobody can promise you a score, an approval, or a dollar amount. Be careful with anyone who does.</p>
+        <p className="build-src">Steps based on guidance from the IRS, the U.S. Small Business Administration, and Dun &amp; Bradstreet. Last reviewed October 2026. Education only, not legal, tax, or financial advice.</p>
+      </div>
+    </section>
   );
 }
 
@@ -728,13 +1170,35 @@ function BusinessFundingPortal() {
           <div className="brand"><ShieldMark size={36} />{BRAND_NAME}</div>
           <div className="nav-links">
             <a onClick={() => scrollToId("start")}>Get Started</a>
+            <a onClick={() => scrollToId("build")}>Build Credit</a>
             <a onClick={() => scrollToId("credit")}>Your Credit</a>
             <a onClick={() => scrollToId("advisor")}>Ask the Advisor</a>
             <a onClick={() => scrollToId("testimonials")}>Reviews</a>
             <a onClick={() => scrollToId("contact")}>Contact</a>
+            <a className="nav-cayu" onClick={() => scrollToId("ready")}>Come As You Are</a>
           </div>
         </div>
       </nav>
+
+      {/* COME AS YOU ARE — where this site sits on the path */}
+      <div className="cayu-strip" aria-label="The Come As You Are path">
+        <div className="wrap">
+          <p className="cayu-motto">Come as you are. Leave as an owner.</p>
+          <ol className="cayu-steps">
+            {PATHWAY.map((s) => {
+              const cls = `cayu-step${s.here ? " here" : ""}${s.blue ? " blue" : ""}`;
+              const inner = (<><span className="n">{s.n}</span><span><span className="t">{s.title}</span><span className="s">{s.sub}</span></span></>);
+              return (
+                <li key={s.n} style={{ display: "contents" }}>
+                  {s.href
+                    ? <a className={cls} href={s.href} target="_blank" rel="noopener noreferrer">{inner}</a>
+                    : <a className={cls} onClick={() => scrollToId(s.scroll)}>{inner}</a>}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </div>
 
       {/* HERO + TWO PATHS */}
       <header className="hero" id="start">
@@ -750,7 +1214,7 @@ function BusinessFundingPortal() {
           </div>
 
           <p className="paths-cue">Where are you right now?</p>
-          <div className="paths">
+          <div className="paths three">
             {/* PATH 1 — START A BUSINESS */}
             <div className="path">
               <BuildingsMotif />
@@ -768,11 +1232,28 @@ function BusinessFundingPortal() {
               </a>
             </div>
 
-            {/* PATH 2 — FUNDING */}
+            {/* PATH 2 — BUILD BUSINESS CREDIT (the 8 steps further down this page) */}
             <div className="path">
               <LadderMotif />
-              <div className="num">Path 2 · Credit &amp; funding</div>
-              <h2>I have a business — fund it</h2>
+              <div className="num">Path 2 · Build business credit</div>
+              <h2>I have a business — build its credit</h2>
+              <p>Already have an LLC, but no business credit yet? Follow our free, do-it-yourself steps one at a time, and check each one off as you go.</p>
+              <ul className="checks">
+                <li><span className="check"><Check /></span>8 baby steps, in order, in plain English</li>
+                <li><span className="check"><Check /></span>Your first steps are free: your EIN and your D-U-N-S Number</li>
+                <li><span className="check"><Check /></span>Build credit in your company's name, separate from you</li>
+              </ul>
+              <div className="spacer" />
+              <a className="btn btn-gold" onClick={() => scrollToId("build")}>
+                Start the 8 steps <Arrow />
+              </a>
+            </div>
+
+            {/* PATH 3 — FUNDING */}
+            <div className="path">
+              <CoinsMotif />
+              <div className="num">Path 3 · Funding</div>
+              <h2>My business is ready — fund it</h2>
               <p>Already have a business? Start with a free assessment. Tell us a little about your business and here's what happens next:</p>
               <ul className="checks">
                 <li><span className="check"><Check /></span>Our AI analyzes your business and shows what you qualify for right now</li>
@@ -785,12 +1266,15 @@ function BusinessFundingPortal() {
               </a>
             </div>
           </div>
-          <button className="scroll-cue" onClick={() => scrollToId("credit")} aria-label="Scroll down to see more options">
+          <button className="scroll-cue" onClick={() => scrollToId("build")} aria-label="Scroll down to see more options">
             <span>Keep scrolling — see all your options</span>
             <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
           </button>
         </div>
       </header>
+
+      {/* BUILD BUSINESS CREDIT — do-it-yourself baby steps */}
+      <BuildCredit />
 
       {/* CREDIT */}
       <section className="section" id="credit">
@@ -812,8 +1296,8 @@ function BusinessFundingPortal() {
 
             {/* PERSONAL CREDIT REFERRAL — black box, gold glow, red button, white text */}
             <div className="glow-gold">
-              <h3>Meet our AI-powered sister company</h3>
-              <p className="lead">Your Credit Advocate puts AI to work — pinpointing exactly what's holding your score back and how to fix it. Trust them with your credit, and you'll return ready to get funded.</p>
+              <h3>Credit first? Start at step 1 — free</h3>
+              <p className="lead">Your Credit Advocate is our free, do-it-yourself credit site. It gives you an AI prompt to find what is hurting your credit and write your own dispute letters. Work on your credit there, then come back here to start your LLC.</p>
               <a className="btn btn-red" href={LINKS.personalCredit} target="_blank" rel="noopener noreferrer">
                 Visit Your Credit Advocate <Arrow />
               </a>
@@ -828,9 +1312,36 @@ function BusinessFundingPortal() {
           <div className="section-head">
             <span className="eyebrow">Entity &amp; structure questions</span>
             <h2>Your Business AI Entity Advisor.</h2>
-            <p>A seasoned guide on entities and structures, available any time. Ask about LLCs vs. corporations, privacy structures, EINs, or how to start building business credit.</p>
+            <p>Quick answers about entities and structures. Tap a suggested question for an instant answer, or type your own. Each visitor gets 5 typed questions a day.</p>
           </div>
           <ConsultantChat />
+        </div>
+      </section>
+
+      {/* WHEN YOU ARE READY — referral to Come As You Are */}
+      <section className="section" id="ready">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="eyebrow">When you are ready</span>
+            <h2>Your LLC is step 2. The property is the goal.</h2>
+            <p>Your Business Advocate is one stop on a bigger path. Once your LLC is started and your funding is in motion, the main site shows you how to get the property.</p>
+          </div>
+          <div className="ready-card">
+            <p className="ready-motto">Come as you are. Leave as an owner.</p>
+            <h3>Next stop: <em>Come As You Are</em></h3>
+            <p className="lead">Come As You Are is the main site of this path — modern learning, powered by AI. It walks you from where you are today to your first property: two ways to own, and one way to earn.</p>
+            <div className="ready-ways">
+              <div className="ready-way"><div className="k">Own</div><div className="v">Buy from a county</div><p>Properties a county or a bank already owns and wants sold.</p></div>
+              <div className="ready-way"><div className="k">Own</div><div className="v">Buy from an owner</div><p>Off-market houses, with who owns them and how to reach them.</p></div>
+              <div className="ready-way"><div className="k">Earn</div><div className="v">Earn interest</div><p>Buy a tax lien and collect interest. Expect interest, not a house.</p></div>
+            </div>
+            {LINKS.comeAsYouAre ? (
+              <a className="btn btn-blue" href={LINKS.comeAsYouAre} target="_blank" rel="noopener noreferrer">
+                Go to Come As You Are <Arrow />
+              </a>
+            ) : null}
+            <p className="ready-fine">Not there yet? That is fine. Finish your LLC first, and come back to this box if and when you are ready. Education only — no results, funding, or purchases are guaranteed.</p>
+          </div>
         </div>
       </section>
 
@@ -879,7 +1390,7 @@ function BusinessFundingPortal() {
 
       <div className="promise-band">
         <div className="promise-quote">"Helping families keep more, build more, and protect more."</div>
-        <div className="promise-sig">— Coach Toni</div>
+        <div className="promise-sig"><span className="team">{TEAM_NAME}</span></div>
         <a className="promise-link" href="https://discounts-are-us.com" target="_blank" rel="noopener">Start with everyday savings → Discounts-Are-Us.com</a>
       </div>
 
