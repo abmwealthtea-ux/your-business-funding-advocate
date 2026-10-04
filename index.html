@@ -35,9 +35,8 @@ const { useState, useRef, useEffect } = React;
    3. LINKS ............... your four affiliate / portal links
    3b. CREDIT_LINKS ....... your affiliate links for the "Build Business
                             Credit" steps (paste them in, buttons appear)
-   4. SYSTEM_PROMPT ....... the AI advisor's personality + rules
-   5. AI_CONFIG ........... how the AI bot connects (preview vs. live)
-   6. AI_LIMITS ........... how many questions each visitor may type per day
+   4. STARTER_ANSWERS ..... the ready-made Quick Answers (free, no AI)
+   5. AI_STARTER .......... the copy-and-paste starter for the visitor's own AI
    ============================================================= */
 
 // 1) ---- Brand name ----
@@ -76,6 +75,7 @@ const PATHWAY = [
 const CREDIT_LINKS = {
   bankAccount:   { label: "Open a business bank account", url: "" },   // shows in Step 2
   businessPhone: { label: "Get a business phone number",  url: "" },   // shows in Step 3
+  officeAddress: { label: "Get a real office address in your state", url: "" },   // shows in the Address tip + Step 3
   vendor1:       { label: "Open a net-30 account",        url: "" },   // shows in Step 5
   vendor2:       { label: "Open a net-30 account",        url: "" },   // shows in Step 5
   vendor3:       { label: "Open a net-30 account",        url: "" },   // shows in Step 5
@@ -116,6 +116,7 @@ const BUILD_STEPS = [
     ],
     todo: [
       "Bring your LLC formation papers, your EIN letter, and your photo ID. Call ahead, because each bank has its own list.",
+      "Use a physical street address for the business. Federal rules require banks to collect a physical location for a business account, so a P.O. Box will not work. See the Address tip above the steps.",
       "Run all business income and business bills through this account only.",
       "Keep money in it. Lenders may look at this account when you ask for funding later.",
     ],
@@ -131,9 +132,12 @@ const BUILD_STEPS = [
     todo: [
       "Write your legal business name exactly as it appears on your LLC papers, every time.",
       "Pick one business address and one business phone number, and use them on every application.",
+      "Make that address a real street address: an office, a virtual office in a real office building, or your home if you are comfortable with it on public records.",
+      "Before you pay for any address, ask the company: \u201cIs this address registered with the Postal Service as a CMRA?\u201d If the answer is yes, keep looking.",
       "Set up a business email so applications do not go to a personal inbox.",
     ],
-    links: [{ ...CREDIT_LINKS.businessPhone, partner: true }],
+    watch: "Skip P.O. Boxes and UPS Store mailboxes. A UPS Store mailbox is a PMB (Private Mailbox) at a CMRA (Commercial Mail Receiving Agency). Many banks and lenders check addresses against the Postal Service's records, and a P.O. Box or CMRA address can get your application declined or sent for extra review.",
+    links: [{ ...CREDIT_LINKS.officeAddress, partner: true }, { ...CREDIT_LINKS.businessPhone, partner: true }],
   },
   {
     id: "duns",
@@ -219,76 +223,23 @@ const BUILD_STEPS = [
   },
 ];
 
-// 5) ---- AI connection ----
-// LIVE MODE (useDirectPreview: false) talks to your secure messenger at /api/chat.
-// Your secret AI key lives in Vercel (ANTHROPIC_API_KEY), never in this file.
-const AI_CONFIG = {
-  // Stays false on the live site. The key is held safely by your Vercel messenger.
-  useDirectPreview: false,
-  // Your secure messenger on Vercel (same site, so a simple "/api/chat" path).
-  productionEndpoint: "/api/chat",
-  // Friendly message shown until the secure AI backend is connected.
-  offlineMessage:
-    "Thanks so much for your question! Our AI advisor is being connected right now and will be ready very soon. In the meantime, the fastest way to get answers tailored to you is the free business assessment at the top of this page \u2014 it maps out your entity setup and your path to funding, and includes a complimentary consultation. Just tap one of the two path cards up top to begin. \ud83d\udc9b",
-};
-
-// 6) ---- AI cost controls ----
-// questionsPerDay: how many questions each visitor may TYPE per day (on their device).
-// The four starter buttons below are answered with ready-made answers, so they
-// never use the AI and never cost anything. Only typed questions reach the AI.
-const AI_LIMITS = { questionsPerDay: 5, maxLetters: 300 };
-
-// Ready-made answers for the starter buttons (free: no AI call). Edit the words any time.
+// 4) ---- Quick Answers (ready-made, free: no AI is used on this site) ----
+// Edit the words any time. The question is on the left, the answer on the right.
 const STARTER_ANSWERS = {
-  "LLC vs. S-Corp \u2014 what's the difference?":
+  "LLC vs. S-Corp — what's the difference?":
     "An LLC is a type of company you form with your state. It builds the legal wall between you and your business.\n\nAn S-Corp is not a separate company. It is a tax choice you can make with the IRS, and an LLC can make it. It only changes how profits are taxed.\n\nAsk a CPA whether the S-Corp choice makes sense for your income.",
   "Do I really need an EIN?":
     "If you want business credit, yes. An EIN is your business's tax ID number from the IRS. Banks ask for it to open a business account, and vendors and lenders use it when you apply in the business name.\n\nIt is free at IRS.gov. It is Step 1 of the business credit steps on this page.",
   "How does the two-layer LLC structure work?":
     "You form one LLC in a privacy-friendly state such as Wyoming or New Mexico. That LLC owns a second LLC in your home state, which runs the business or holds the property. In many states, the public record for the local LLC can then show the holding company instead of your name.\n\nRules differ by state, so confirm the setup with an attorney before you file.",
   "First steps to build business credit?":
-    "Follow the 8 steps on this page, in order. Start with your free EIN, open a business bank account, use one name, address, and phone everywhere, and get your free D-U-N-S Number. Then open vendor accounts that report your payments, and pay early.\n\nTap \"Build business credit\" at the top of the page to begin.",
+    "Follow the 8 steps on this page, in order. Start with your free EIN, open a business bank account, use one name, address, and phone everywhere, and get your free D-U-N-S Number. Then open vendor accounts that report your payments, and pay early.\n\nTap \"Start the 8 steps\" at the top of the page to begin.",
 };
 
-// 4) ---- The AI advisor's personality + guardrails ----
-const SYSTEM_PROMPT = `You are the Business Entity Advisor for an online business-building portal — a seasoned, calm, confident guide with years of experience helping entrepreneurs set up and structure their businesses. You sound like a supportive coach: warm, clear, and professional. Never stiff, never salesy.
+// 5) ---- Starter the visitor copies into their own favorite AI ----
+const AI_STARTER = "I am setting up my business and building business credit. Explain this to me in plain English, step by step, and tell me what to double-check with a licensed attorney or CPA. My state is [your state]. My question is: [type your question here]";
 
-WHAT YOU HELP WITH (your only topics):
-- Entity types and when each fits: Sole Proprietorship, Partnership, LLC, S-Corp election, C-Corp — pros, cons, and plain-English differences.
-- Liability protection and separating personal from business.
-- General, non-specific tax-treatment differences between entities.
-- EINs, Operating Agreements, and Registered Agents — what they are and why they matter.
-- Privacy structuring, including the two-layer approach (a privacy-friendly state LLC such as Wyoming or New Mexico owning a local operating LLC).
-- What business credit is and why it matters, at a high level only.
-
-HOW YOU ANSWER:
-- Lead with the answer. Keep it to 2-4 short sentences, or at most 4 quick points for a list. No filler, no rambling, no long preamble.
-- Plain English. Define any term the moment you use it.
-- Be confident and encouraging — give a clear recommendation or next step when asked, framed as general education.
-- Use simple dashes for short lists. Never use markdown symbols like **, ##, or backticks.
-
-STAY IN YOUR LANE (redirect, don't drift):
-- Personal credit repair → point them to the sister site, Your Credit Advocate, linked on this page. It is free and do-it-yourself.
-- Real estate: buying property, tax liens, tax deeds, finding deals, or what comes after the LLC and funding → point them to Come As You Are, the main site of this path, in the "When you are ready" section of this page. Do not teach real estate here.
-- How to BUILD business credit (the steps, a plan, a roadmap) → do NOT repeat the whole process. Point them to the 8 free steps in the "Build your business credit" section on this page, and answer only the specific question in a sentence or two.
-- Funding, loan amounts, or what they qualify for → point them to the free funding assessment at the top of the page (Path 3).
-- Anything outside business entities, structures, formation, or foundational business credit → briefly say it's outside what you cover, and steer back.
-
-HARD RULES:
-- Educational information only. You are NOT a lawyer, CPA, or financial advisor, and you do NOT give legal, tax, or financial advice.
-- Never promise or guarantee any result, approval, funding amount, or timeline.
-- For anything specific to their situation, tell them to confirm with a licensed attorney or CPA.
-- Never name or claim affiliation with any outside company or brand, other than the two sites in this path: Your Credit Advocate and Come As You Are. You are simply this portal's advisor.
-
-THE PATH THIS PORTAL BELONGS TO (mention only when it helps):
-- Come as you are. Leave as an owner. Step 1 fix your credit (Your Credit Advocate). Step 2 start your LLC and step 3 get funding (this portal). Step 4 get the property (Come As You Are).`;
-
-const STARTERS = [
-  "LLC vs. S-Corp — what's the difference?",
-  "Do I really need an EIN?",
-  "How does the two-layer LLC structure work?",
-  "First steps to build business credit?",
-];
+const STARTERS = Object.keys(STARTER_ANSWERS);
 
 // ---- Testimonials ----
 const TESTIMONIALS = [
@@ -330,7 +281,7 @@ const LEGAL = {
     title: "Terms of Service",
     sections: [
       { h: "", p: [`Last updated: 2024. By using this website, you agree to these Terms. Please read them carefully.`] },
-      { h: "Educational purpose only", p: ["All content, tools, and AI responses on this site are for general education and information. They are not legal, tax, accounting, or financial advice, and using this site does not create a professional-client relationship."] },
+      { h: "Educational purpose only", p: ["All content and tools on this site are for general education and information. They are not legal, tax, accounting, or financial advice, and using this site does not create a professional-client relationship."] },
       { h: "No guarantees", p: ["We make no guarantee of any outcome — including business-formation results, credit improvement, or funding approval or amounts. Results vary from person to person."] },
       { h: "Affiliate relationships", p: ["This site contains partner and affiliate links. We may earn a commission when you sign up through them, at no extra cost to you."] },
       { h: "Your responsibilities", p: ["You agree to provide accurate information and to use this site lawfully. You are responsible for your own business and financial decisions, and for reviewing anything important with a qualified professional before acting."] },
@@ -341,9 +292,9 @@ const LEGAL = {
   disclaimer: {
     title: "Important Disclaimer",
     sections: [
-      { h: "", p: ["This platform provides business education and AI-generated guidance on entity formation, business structure, and funding readiness. This is NOT legal, tax, or financial advice."] },
+      { h: "", p: ["This platform provides general business education on entity formation, business structure, and funding readiness. This is NOT legal, tax, or financial advice."] },
       { h: "", p: ["No specific results, approvals, or funding amounts are guaranteed. Every situation is different, and results vary."] },
-      { h: "", p: ["The AI advisor is an automated tool and can make mistakes. Always double-check any information it provides, and confirm important decisions with a qualified attorney, CPA, or financial professional before acting."] },
+      { h: "", p: ["This site does not run an AI chat. If you use your own AI tool for more questions, it can make mistakes. Always double-check what it tells you, and confirm important decisions with a qualified attorney, CPA, or financial professional before acting."] },
       { h: "", p: ["Some links on this page are partner or affiliate links, and we may earn a commission at no extra cost to you."] },
     ],
   },
@@ -731,9 +682,33 @@ const STYLES = `
 @media(min-width:981px){ .paths.three{ grid-template-columns:repeat(3,1fr); gap:20px; } .paths.three .path{ padding:34px 26px; } .paths.three .path h2{ font-size:24px; } }
 @media(max-width:980px){ .paths.three{ grid-template-columns:1fr; } }
 
-.chat-limit{ font-size:12px; color:var(--muted); padding:0 24px 12px; }
+.section-tight{ padding:40px 0; }
+.qa{ max-width:820px; margin:0 auto; background:var(--navy-2); border:1px solid var(--line); border-radius:16px; padding:20px 22px; }
+.qa-title{ font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:20px; color:#fff; margin:0 0 12px; }
+.qa-chips{ padding:0; }
+.chip-on{ background:var(--gold); color:#0A1B3D; border-color:var(--gold); font-weight:700; }
+.chip-on:hover{ background:var(--gold-soft); }
+.qa-a{ margin:12px 0 0; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px; font-size:14.5px; color:#E2E8F3; white-space:pre-wrap; line-height:1.6; }
+.qa-more{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; border-top:1px solid var(--line); margin-top:16px; padding-top:14px; }
+.qa-more p{ margin:0; flex:1 1 320px; font-size:14px; color:var(--muted); }
+.qa-more p b{ color:#fff; }
+.qa-fine{ font-size:12px; color:#7E92B6; margin:10px 0 0; }
+
+/* ADDRESS TIP */
+.addr-tip{ max-width:820px; margin:0 auto 22px; background:#070709; border:1.5px solid rgba(224,72,90,0.55); border-radius:16px; padding:18px 22px;
+  box-shadow:0 0 18px rgba(224,72,90,0.18); }
+.addr-tip-head{ display:flex; align-items:center; gap:9px; font-family:'Playfair Display',Georgia,serif; font-weight:700; font-size:18px; color:#fff; margin:0 0 8px; }
+.addr-tip-head svg{ color:var(--gold); flex:0 0 auto; }
+.addr-tip p{ margin:0 0 12px; font-size:14.5px; color:#D7DEEC; line-height:1.6; }
+.addr-tip p:last-child{ margin-bottom:0; }
+.addr-tip b{ color:var(--gold-soft); }
+.addr-tip .addr-fine{ font-size:12.5px; color:var(--muted); margin:12px 0 0; }.qa-fine b{ color:var(--gold-soft); }
 @media(max-width:560px){
-  .chat-limit{ padding:0 16px 12px; }
+  .qa{ padding:18px 16px; }
+  .section-tight{ padding:32px 0; }
+  .addr-tip{ padding:16px 16px; }
+  .addr-tip .btn{ width:100%; }
+  .qa-more .btn{ width:100%; }
 }
 .hero,.section{ scroll-margin-top:84px; }
 .nav-links a.nav-cayu{ color:var(--blue-soft); font-weight:700; }
@@ -871,149 +846,35 @@ function Modal({ data, onClose }) {
   );
 }
 
-const GREETING = {
-  role: "assistant",
-  content:
-    "Hi — I'm your Business AI Entity Advisor. Ask me anything about LLCs, S-corps, EINs, privacy structures, or building business credit, and I'll keep it clear and simple. What are you looking to set up?",
-};
+function QuickAnswers() {
+  const [pick, setPick] = useState(null);
+  const [copied, setCopied] = useState(false);
 
-function ConsultantChat() {
-  const [messages, setMessages] = useState([GREETING]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const bodyRef = useRef(null);
-
-  useEffect(() => {
-    if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
-  }, [messages, loading]);
-
-  function resetChat() {
-    setMessages([GREETING]);
-    setInput("");
-  }
-
-  // How many questions this visitor has typed today (kept on their device).
-  const LIMIT_KEY = "yba_ai_questions";
-  function usedToday() {
+  function copyStarter() {
+    const done = () => { setCopied(true); setTimeout(() => setCopied(false), 2200); };
     try {
-      const d = JSON.parse(window.localStorage.getItem(LIMIT_KEY) || "{}");
-      return d.day === new Date().toDateString() ? (d.n || 0) : 0;
-    } catch (e) { return 0; }
-  }
-  function countOne() {
-    try { window.localStorage.setItem(LIMIT_KEY, JSON.stringify({ day: new Date().toDateString(), n: usedToday() + 1 })); } catch (e) { /* ignore */ }
-  }
-  const [left, setLeft] = useState(AI_LIMITS.questionsPerDay);
-  useEffect(() => { setLeft(Math.max(0, AI_LIMITS.questionsPerDay - usedToday())); }, []);
-
-  async function send(text) {
-    const content = (text ?? input).trim().slice(0, AI_LIMITS.maxLetters);
-    if (!content || loading) return;
-    const next = [...messages, { role: "user", content }];
-    setMessages(next);
-    setInput("");
-
-    // Starter buttons: ready-made answer, no AI, no cost.
-    if (STARTER_ANSWERS[content]) {
-      setMessages([...next, { role: "assistant", content: STARTER_ANSWERS[content] }]);
-      return;
-    }
-
-    // Daily limit reached: friendly note, no AI, no cost.
-    if (usedToday() >= AI_LIMITS.questionsPerDay) {
-      setMessages([...next, { role: "assistant", content: `You have used today's ${AI_LIMITS.questionsPerDay} free questions. The 8 business credit steps on this page answer most questions, or email us at ${CONTACT.email}. You can ask more tomorrow.` }]);
-      setLeft(0);
-      return;
-    }
-    countOne();
-    setLeft(Math.max(0, AI_LIMITS.questionsPerDay - usedToday()));
-    setLoading(true);
-
-    // Not connected to a secure backend yet -> warm fallback, no error.
-    if (!AI_CONFIG.useDirectPreview && AI_CONFIG.productionEndpoint.indexOf("YOUR-PROJECT") !== -1) {
-      setTimeout(() => {
-        setMessages([...next, { role: "assistant", content: AI_CONFIG.offlineMessage }]);
-        setLoading(false);
-      }, 650);
-      return;
-    }
-
-    try {
-      let reply = "";
-      if (AI_CONFIG.useDirectPreview) {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-6",
-            max_tokens: 1000,
-            system: SYSTEM_PROMPT,
-            messages: next.map((m) => ({ role: m.role, content: m.content })),
-          }),
-        });
-        const data = await res.json();
-        reply = (data.content || []).map((i) => i.text || "").join("\n").trim();
-      } else {
-        const res = await fetch(AI_CONFIG.productionEndpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: next.slice(-6) }),
-        });
-        const data = await res.json();
-        reply = data.reply || data.content || "";
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(AI_STARTER).then(done, done);
+        return;
       }
-      setMessages([...next, { role: "assistant", content: reply || "Sorry, I didn't catch that — could you ask again?" }]);
-    } catch (e) {
-      setMessages([...next, { role: "assistant", content: "I'm having trouble connecting right now. Please try again in a moment." }]);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { /* fall through */ }
+    done();
   }
 
   return (
-    <div className="chat">
-      <div className="chat-top">
-        <div className="chat-id">
-          <div className="name">Business AI Entity Advisor</div>
-          <div className="role">Seasoned structuring &amp; formation guide</div>
-        </div>
-        <div className="chat-tools">
-          <span className="dot" title="Online" />
-          {messages.length > 1 && (
-            <button className="chat-reset" onClick={resetChat} aria-label="Start a new chat">New chat</button>
-          )}
-        </div>
-      </div>
-      <div className="chat-disc">
-        <b>AI can make mistakes.</b> Please double-check important information.
-      </div>
-      <div className="chat-body" ref={bodyRef}>
-        {messages.map((m, i) => (
-          <div key={i} className={`msg ${m.role === "user" ? "me" : "bot"}`}>{m.content}</div>
+    <div className="qa">
+      <div className="qa-title">Quick answers</div>
+      <div className="chips qa-chips">
+        {STARTERS.map((q) => (
+          <button key={q} className={`chip${pick === q ? " chip-on" : ""}`} onClick={() => setPick(pick === q ? null : q)} aria-pressed={pick === q}>{q}</button>
         ))}
-        {loading && (
-          <div className="msg bot"><span className="typing-dots"><i /><i /><i /></span></div>
-        )}
       </div>
-      {(
-        <div className="chips">
-          {STARTERS.map((q) => (
-            <button key={q} className="chip" onClick={() => send(q)}>{q}</button>
-          ))}
-        </div>
-      )}
-      <div className="chat-limit">{left} of {AI_LIMITS.questionsPerDay} typed questions left today. The suggested questions above are always free.</div>
-      <div className="chat-input">
-        <input
-          maxLength={AI_LIMITS.maxLetters}
-          value={input}
-          placeholder="Ask about entities, structures, or business credit…"
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-          aria-label="Ask the business entity advisor"
-        />
-        <button className="send" onClick={() => send()} disabled={loading || !input.trim()}>Send</button>
+      {pick ? <div className="qa-a" aria-live="polite">{STARTER_ANSWERS[pick]}</div> : null}
+      <div className="qa-more">
+        <p><b>More questions?</b> Ask your favorite AI, such as ChatGPT, Claude, or Gemini. Copy our starter, paste it in, and fill in the brackets.</p>
+        <button className="btn btn-sm" onClick={copyStarter}>{copied ? "Copied" : "Copy the starter"}</button>
       </div>
+      <p className="qa-fine">AI can make mistakes. Double-check what it tells you, and never type your Social Security or account numbers into an AI tool.</p>
     </div>
   );
 }
@@ -1054,6 +915,17 @@ function BuildCredit() {
         <div className="build-first">
           <p><b>Before Step 1:</b> you need an LLC or corporation. A sole proprietorship (a business run in your own name, with no company formed) cannot build credit that is separate from you.</p>
           <a className="btn btn-sm" onClick={() => scrollToId("start")}>Form my business first</a>
+        </div>
+
+        <div className="addr-tip">
+          <div className="addr-tip-head"><Warn /> Address tip: no P.O. Boxes or UPS Store mailboxes</div>
+          <p>Banks and lenders want your business at a real street address. A P.O. Box will not work for a business bank account. A UPS Store or similar mailbox is a <b>PMB</b> (Private Mailbox) at a <b>CMRA</b> (Commercial Mail Receiving Agency), and many lenders flag those addresses. Use an office, your home, or a virtual office in a real office building that is not registered as a CMRA.</p>
+          {CREDIT_LINKS.officeAddress.url ? (
+            <>
+              <a className="btn btn-sm" href={CREDIT_LINKS.officeAddress.url} target="_blank" rel="noopener noreferrer">{CREDIT_LINKS.officeAddress.label} <Arrow /></a>
+              <p className="addr-fine">Partner link: we may earn a commission if you sign up, at no extra cost to you.</p>
+            </>
+          ) : null}
         </div>
 
         <div className="build-prog" aria-live="polite">
@@ -1172,7 +1044,7 @@ function BusinessFundingPortal() {
             <a onClick={() => scrollToId("start")}>Get Started</a>
             <a onClick={() => scrollToId("build")}>Build Credit</a>
             <a onClick={() => scrollToId("credit")}>Your Credit</a>
-            <a onClick={() => scrollToId("advisor")}>Ask the Advisor</a>
+            <a onClick={() => scrollToId("advisor")}>Quick Answers</a>
             <a onClick={() => scrollToId("testimonials")}>Reviews</a>
             <a onClick={() => scrollToId("contact")}>Contact</a>
             <a className="nav-cayu" onClick={() => scrollToId("ready")}>Come As You Are</a>
@@ -1306,15 +1178,10 @@ function BusinessFundingPortal() {
         </div>
       </section>
 
-      {/* AI ADVISOR */}
-      <section className="section" id="advisor">
+      {/* QUICK ANSWERS (no AI on this site) */}
+      <section className="section section-tight" id="advisor">
         <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">Entity &amp; structure questions</span>
-            <h2>Your Business AI Entity Advisor.</h2>
-            <p>Quick answers about entities and structures. Tap a suggested question for an instant answer, or type your own. Each visitor gets 5 typed questions a day.</p>
-          </div>
-          <ConsultantChat />
+          <QuickAnswers />
         </div>
       </section>
 
@@ -1339,7 +1206,9 @@ function BusinessFundingPortal() {
               <a className="btn btn-blue" href={LINKS.comeAsYouAre} target="_blank" rel="noopener noreferrer">
                 Go to Come As You Are <Arrow />
               </a>
-            ) : null}
+            ) : (
+              <span className="btn btn-blue" style={{ cursor: "default" }} aria-disabled="true">Come As You Are — opening soon</span>
+            )}
             <p className="ready-fine">Not there yet? That is fine. Finish your LLC first, and come back to this box if and when you are ready. Education only — no results, funding, or purchases are guaranteed.</p>
           </div>
         </div>
@@ -1381,8 +1250,8 @@ function BusinessFundingPortal() {
             </div>
             <div className="contact-card">
               <h3>Need a quick answer now?</h3>
-              <p>Ask our AI Entity Advisor about LLCs, structures, EINs, and business credit — instant answers, any time.</p>
-              <a className="btn btn-gold" onClick={() => scrollToId("advisor")}>Ask the advisor</a>
+              <p>See our Quick Answers about LLCs, EINs, structures, and business credit, plus a starter you can paste into your favorite AI.</p>
+              <a className="btn btn-gold" onClick={() => scrollToId("advisor")}>See Quick Answers</a>
             </div>
           </div>
         </div>
@@ -1400,7 +1269,7 @@ function BusinessFundingPortal() {
           <div className="wrap">
             <div className="disc-card">
               <h4 className="disc-title"><Warn /> Important Disclaimer</h4>
-              <p>This platform provides business education and AI-generated guidance on entity formation, business structure, and funding readiness. This is NOT legal, tax, or financial advice. No specific results, approvals, or funding amounts are guaranteed. Always review any information with a qualified attorney, CPA, or financial professional before acting on it. Some links on this page are partner or affiliate links, and we may earn a commission at no extra cost to you.</p>
+              <p>This platform provides general business education on entity formation, business structure, and funding readiness. This is NOT legal, tax, or financial advice. No specific results, approvals, or funding amounts are guaranteed. Always review any information with a qualified attorney, CPA, or financial professional before acting on it. Some links on this page are partner or affiliate links, and we may earn a commission at no extra cost to you.</p>
             </div>
           </div>
         </div>
